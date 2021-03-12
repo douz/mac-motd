@@ -44,5 +44,8 @@ modulesArray=(banner system_info hdd_usage battery calendar_events)
 
 You can add your own custom modules just by placing your `.sh` scripts in the `modules` directory and include them in the `modulesArray` variable without the `.sh` extension in `motd.sh`
 
+### Banner module
+You can set your own banner message by replacing the value of the variable `bannerText` in `modules/banner.sh`.
+
 ## Support and contribution
 For support and/or contributions, open an issue on this repository or contact `dbarahona@me.com`
