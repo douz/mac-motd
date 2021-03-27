@@ -2,7 +2,7 @@
 My personal MOTD configuration for Mac OS and ZSH.
 
 ## Screenshot
-![screenshot1](/images/screen1.png)
+![screenshot1](/images/screen2.png)
 
 ## Pre-requirements
 #### 1. figlet
@@ -23,6 +23,12 @@ Needed to gather CPU and GPU temperature.
 ```bash
 brew install osx-cpu-temp
 ```
+#### 4. smartmontools
+Needed to gather disk temperature.
+**Installation:**
+```bash
+brew install smartmontools
+```
 
 ## Installation
 1. Clone the repository.
@@ -39,7 +45,7 @@ echo "/full/path/to/repo/mac-motd/motd.sh" >> ~/.zshrc
 The modules are located in the `modules` directory. You can select which modules to use and their order in `motd.sh`
 ```bash
 # Set modules to load
-modulesArray=(banner system_info hdd_usage battery calendar_events)
+modulesArray=(banner temperature hdd_usage battery calendar_events)
 ```
 
 You can add your own custom modules just by placing your `.sh` scripts in the `modules` directory and include them in the `modulesArray` variable without the `.sh` extension in `motd.sh`
