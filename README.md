@@ -110,6 +110,32 @@ brew install figlet ical-buddy osx-cpu-temp smartmontools
 
 The runtime skips modules whose dependencies are missing and prints a warning.
 
+## Local Testing
+
+Run the local test suite:
+
+```bash
+./tests/run.sh
+```
+
+What is covered:
+
+- install idempotency (`install.sh` can run repeatedly without duplicate hooks)
+- uninstall behavior (preserve vs purge config)
+- runtime behavior for missing modules/dependencies
+
+## CI
+
+GitHub Actions workflow:
+
+- `.github/workflows/ci.yml`
+
+CI runs on PRs and `master` pushes:
+
+- zsh syntax checks
+- `shellcheck`
+- `./tests/run.sh`
+
 ## Packaging and Sharing via `brew.douz.io`
 
 Use `brew.douz.io` as your documentation/index domain for all future taps.
@@ -117,13 +143,37 @@ Use `brew.douz.io` as your documentation/index domain for all future taps.
 Recommended setup:
 
 1. Create tap repo (for example `douz/homebrew-tap`).
-2. Copy/update formula from `packaging/homebrew/mac-motd.rb` into tap repo as `Formula/mac-motd.rb`.
+2. Create repository secret `HOMEBREW_TAP_TOKEN` in `douz/mac-motd` with write access to `douz/homebrew-tap`.
 3. Publish a tagged release in this repo (for example `v0.1.0`).
-4. Compute tarball SHA256 and update formula `url`/`sha256`.
-5. Push formula to tap repo.
-6. In DNS, point `brew.douz.io` to your Pages/docs host and publish install docs for all taps.
+4. Let the publish workflow update tap formula automatically.
+5. In DNS, point `brew.douz.io` to your Pages/docs host and publish install docs for all taps.
 
 This pattern keeps one stable domain (`brew.douz.io`) for discovery while using GitHub tap repos for actual package distribution.
+
+## Homebrew Tap Publish Action
+
+Workflow:
+
+- `.github/workflows/publish-homebrew-tap.yml`
+
+Triggers:
+
+- push tag `v*` (for example `v0.1.0`)
+- manual `workflow_dispatch` with a tag input
+
+What it does:
+
+1. Downloads release tarball for the selected tag.
+2. Calculates SHA256.
+3. Checks out `douz/homebrew-tap`.
+4. Generates/updates `Formula/mac-motd.rb`.
+5. Commits and pushes the formula update.
+
+Manual trigger example:
+
+1. Open **Actions** -> **Publish Homebrew Tap Formula**.
+2. Click **Run workflow**.
+3. Enter tag like `v0.1.0`.
 
 ## Module Development
 
