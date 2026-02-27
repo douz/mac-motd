@@ -43,7 +43,7 @@ jobs:
           echo "TARBALL_SHA256=$SHA256" >> "$GITHUB_ENV"
 
       - name: Checkout homebrew tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: douz/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
