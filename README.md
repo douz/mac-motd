@@ -1,57 +1,132 @@
-# Mac OS MOTD
-My personal MOTD configuration for Mac OS and ZSH.
+# mac-motd
 
-## Screenshot
-![screenshot1](/images/screen2.png)
+Modular MOTD for macOS + zsh, with user config in `~/.douz.io/motd_config.zsh`.
 
-## Pre-requirements
-#### 1. figlet
-Needed to generate the banner text.
-**Installation:**
-```bash
-brew install figlet
-```
-#### 2. icalBuddy
-Needed to get events from the Calendar application.
-**Installation:**
-```bash
-brew install ical-buddy
-```
-#### 3. osx-cpu-temp
-Needed to gather CPU and GPU temperature.
-**Installation:**
-```bash
-brew install osx-cpu-temp
-```
-#### 4. smartmontools
-Needed to gather disk temperature.
-**Installation:**
-```bash
-brew install smartmontools
-```
+## What This Repo Provides
+
+- `motd.sh`: runtime module loader.
+- `modules/*.sh`: output modules.
+- `install.sh`: idempotent installer (shell hook + user config).
+- `uninstall.sh`: clean uninstaller (`--purge-config` supported).
+- `bin/mac-motd`: command wrapper (`run`, `install`, `uninstall`, `doctor`).
+- `packaging/homebrew/mac-motd.rb`: formula template for your tap.
 
 ## Installation
-1. Clone the repository.
+
+### Option 1: Homebrew Tap (recommended)
+
+Use your tap (hosted in GitHub, documented under `brew.douz.io`):
+
+```bash
+brew tap douz/tap
+brew install mac-motd
+mac-motd install
+```
+
+### Option 2: Local/Source install
+
 ```bash
 git clone git@github.com:douz/mac-motd.git
+cd mac-motd
+./install.sh
 ```
-2. Add the `motd.sh` script at the end of your `.zshrc` file.
+
+## User Config Location
+
+The installer creates:
+
 ```bash
-echo "/full/path/to/repo/mac-motd/motd.sh" >> ~/.zshrc
+~/.douz.io/motd_config.zsh
 ```
-3. Restart your terminal.
 
-## Modules
-The modules are located in the `modules` directory. You can select which modules to use and their order in `motd.sh`
+Default content is sourced from `config/motd_config.zsh`.
+
+Example:
+
+```zsh
+modulesArray=(
+  banner
+  temperature
+  hdd_usage
+  battery
+  calendar_events
+)
+
+bannerText="Douz"
+```
+
+## Commands
+
 ```bash
-# Set modules to load
-modulesArray=(banner temperature hdd_usage battery calendar_events)
+mac-motd run
+mac-motd install
+mac-motd uninstall
+mac-motd uninstall --purge-config
+mac-motd doctor
 ```
 
-You can add your own custom modules just by placing your `.sh` scripts in the `modules` directory and include them in the `modulesArray` variable without the `.sh` extension in `motd.sh`
+## Uninstall
 
-### Banner module
-You can set your own banner message by replacing the value of the variable `bannerText` in `modules/banner.sh`.
+### Easy uninstall
 
-## Support and contribution
-For support and/or contributions, open an issue on this repository or contact `dbarahona@me.com`
+```bash
+mac-motd uninstall
+```
+
+This removes the shell hook and installed runtime files, but keeps your config.
+
+### Full uninstall (including config)
+
+```bash
+mac-motd uninstall --purge-config
+```
+
+### If installed via Homebrew
+
+```bash
+brew uninstall mac-motd
+```
+
+Then optionally remove shell hook/config if still present:
+
+```bash
+mac-motd uninstall --purge-config
+```
+
+## Dependencies
+
+The following tools are used by modules and should be installed when needed:
+
+- `figlet`
+- `ical-buddy`
+- `osx-cpu-temp`
+- `smartmontools`
+
+Install with:
+
+```bash
+brew install figlet ical-buddy osx-cpu-temp smartmontools
+```
+
+The runtime skips modules whose dependencies are missing and prints a warning.
+
+## Packaging and Sharing via `brew.douz.io`
+
+Use `brew.douz.io` as your documentation/index domain for all future taps.
+
+Recommended setup:
+
+1. Create tap repo (for example `douz/homebrew-tap`).
+2. Copy/update formula from `packaging/homebrew/mac-motd.rb` into tap repo as `Formula/mac-motd.rb`.
+3. Publish a tagged release in this repo (for example `v0.1.0`).
+4. Compute tarball SHA256 and update formula `url`/`sha256`.
+5. Push formula to tap repo.
+6. In DNS, point `brew.douz.io` to your Pages/docs host and publish install docs for all taps.
+
+This pattern keeps one stable domain (`brew.douz.io`) for discovery while using GitHub tap repos for actual package distribution.
+
+## Module Development
+
+Add new modules in `modules/<name>.sh`, then include them in `modulesArray` inside `~/.douz.io/motd_config.zsh`.
+
+If a module requires commands, add its dependencies in `motd.sh` under `moduleRequirements`.

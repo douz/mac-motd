@@ -7,6 +7,11 @@ criticalBatteryLevel=20
 barClear="\e[0m"
 barContent=""
 batteryCharge=$(pmset -g batt | grep -e "InternalBattery" | awk '{print $3}' | awk -F '%' '{print $1}')
+if [ -z "${batteryCharge}" ]; then
+    echo -e "\e[1mBattery Charge:\e[0m not available on this device"
+    echo ""
+    exit 0
+fi
 barUsageWidth=$(((${batteryCharge} * ${barWidth}) / 100))
 # Set bar color depending on charge level
 if [ "${batteryCharge}" -gt "${warnBatteryLevel}" ]; then

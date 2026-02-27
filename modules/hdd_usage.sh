@@ -5,10 +5,15 @@ barWidth=50
 warnDiscUsage=90
 barClear="\e[0m"
 barContent=""
-diskSize=$(diskutil info /dev/disk1s1 | grep Total | awk '{ print int($4) }')
-diskFree=$(diskutil info /dev/disk1s1 | grep Free | awk '{ print int($4) }')
-diskUsage=$((${diskSize} - ${diskFree}))
-diskUsagePercent=$(bc -l <<< "scale=2; (${diskUsage} / ${diskSize}) * 100" | awk '{ print int($1) }')
+diskStats="$(df -g / | awk 'NR==2 { print $2" "$3" "$5 }')"
+diskSize="$(echo "$diskStats" | awk '{ print $1 }')"
+diskUsage="$(echo "$diskStats" | awk '{ print $2 }')"
+diskUsagePercent="$(echo "$diskStats" | awk '{ gsub("%", "", $3); print $3 }')"
+if [ -z "${diskUsagePercent}" ] || [ -z "${diskSize}" ] || [ -z "${diskUsage}" ]; then
+    echo -e "\e[1mHDD Usage:\e[0m unavailable"
+    echo ""
+    exit 0
+fi
 barUsageWidth=$(((${diskUsagePercent} * ${barWidth}) / 100))
 barColor="\e[33m"
 # Set bar color to red if warning value is reached

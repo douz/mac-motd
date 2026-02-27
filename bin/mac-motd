@@ -1,0 +1,51 @@
+#!/bin/zsh
+set -euo pipefail
+
+baseDir="$(cd "$(dirname "$0")/.." && pwd)"
+
+usage() {
+  cat <<USAGE
+Usage: mac-motd <command>
+
+Commands:
+  run            Run the MOTD output
+  install        Install motd runner and shell hook
+  uninstall      Uninstall motd runner and shell hook
+  doctor         Validate required tools and config
+USAGE
+}
+
+case "${1:-}" in
+  run)
+    exec "${baseDir}/motd.sh"
+    ;;
+  install)
+    exec "${baseDir}/install.sh"
+    ;;
+  uninstall)
+    shift || true
+    exec "${baseDir}/uninstall.sh" "$@"
+    ;;
+  doctor)
+    missing=0
+    for cmd in zsh figlet pmset df; do
+      if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Missing: $cmd"
+        missing=1
+      fi
+    done
+    if [ ! -f "${HOME}/.douz.io/motd_config.zsh" ]; then
+      echo "Missing config: ~/.douz.io/motd_config.zsh"
+      missing=1
+    fi
+    if [ "$missing" -eq 0 ]; then
+      echo "mac-motd doctor: ok"
+    else
+      exit 1
+    fi
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
