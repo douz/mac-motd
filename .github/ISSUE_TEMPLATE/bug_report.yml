@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a problem in mac-motd
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is happening?
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 15.3
+  - type: input
+    id: shell
+    attributes:
+      label: Shell version
+      placeholder: e.g. zsh 5.9
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Install method
+      options:
+        - Homebrew
+        - Source install
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / logs
+    validations:
+      required: true

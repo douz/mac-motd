@@ -180,3 +180,15 @@ Manual trigger example:
 Add new modules in `modules/<name>.sh`, then include them in `modulesArray` inside `~/.douz.io/motd_config.zsh`.
 
 If a module requires commands, add its dependencies in `motd.sh` under `moduleRequirements`.
+
+## Community and Governance
+
+This repository includes:
+
+- `LICENSE` (MIT)
+- `CONTRIBUTING.md`
+- `CODE_OF_CONDUCT.md`
+- `SECURITY.md`
+- GitHub issue templates and PR template under `.github/`
+
+These files define contribution workflow, behavior standards, and private security reporting.
