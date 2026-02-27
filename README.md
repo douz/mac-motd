@@ -135,6 +135,7 @@ CI runs on PRs and `master` pushes:
 - zsh syntax checks
 - `shellcheck`
 - `./tests/run.sh`
+- Dependabot updates for GitHub Actions are configured in `.github/dependabot.yml`.
 
 ## Packaging and Sharing via `brew.douz.io`
 
@@ -174,6 +175,27 @@ Manual trigger example:
 1. Open **Actions** -> **Publish Homebrew Tap Formula**.
 2. Click **Run workflow**.
 3. Enter tag like `v0.1.0`.
+
+## Release Process
+
+1. Update `CHANGELOG.md` under `[Unreleased]`.
+2. Create and push a version tag:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+3. GitHub Actions will:
+   - create a GitHub Release with generated notes (`.github/workflows/release.yml`)
+   - update the Homebrew tap formula (`.github/workflows/publish-homebrew-tap.yml`)
+
+## Project Ownership and Support
+
+- Maintainer details: `MAINTAINERS.md`
+- Community support expectations: `SUPPORT.md`
+- Vulnerability reporting: `SECURITY.md`
+- License: `LICENSE` (MIT)
 
 ## Module Development
 
