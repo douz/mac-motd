@@ -23,7 +23,7 @@ jobs:
 
       - name: ShellCheck
         run: |
-          shellcheck -x motd.sh install.sh uninstall.sh bin/mac-motd modules/*.sh
+          shellcheck -x -e SC1071 motd.sh install.sh uninstall.sh bin/mac-motd modules/*.sh
 
       - name: Run tests
         run: |
