@@ -1,7 +1,9 @@
 #!/bin/zsh
 set -euo pipefail
 
-baseDir="$(cd "$(dirname "$0")/.." && pwd)"
+# Resolve the real script path so Homebrew symlinks still point at libexec.
+scriptPath="${(%):-%N}"
+baseDir="${scriptPath:A:h:h}"
 
 usage() {
   cat <<USAGE
