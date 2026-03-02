@@ -30,10 +30,11 @@ Prints disk, CPU, and GPU temperatures with threshold-based highlighting.
 
 ### `hdd_usage.sh`
 
-Prints root-volume disk usage and a colorized usage bar.
+Prints writable disk usage and a colorized usage bar.
 
 - Requires: `df`
-- Notes: warns as unavailable if usage values cannot be parsed
+- Config: `DOUZ_HDD_MOUNT_POINT` env var to override the detected mount point
+- Notes: prefers `/System/Volumes/Data` on APFS systems so the output reflects the writable data volume instead of the sealed system volume
 
 ### `battery.sh`
 
