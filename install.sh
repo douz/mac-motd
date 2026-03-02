@@ -8,6 +8,13 @@ configFile="${configDir}/motd_config.zsh"
 zshrcFile="${HOME}/.zshrc"
 startMarker="# >>> douz-motd >>>"
 endMarker="# <<< douz-motd <<<"
+refreshConfig=0
+configStatus=""
+backupFile=""
+
+if [ "${1:-}" = "--refresh-config" ]; then
+  refreshConfig=1
+fi
 
 mkdir -p "${installDir}" "${configDir}"
 
@@ -20,6 +27,14 @@ rsync -a --delete \
 
 if [ ! -f "${configFile}" ]; then
   cp "${repoDir}/config/motd_config.zsh" "${configFile}"
+  configStatus="created"
+elif [ "${refreshConfig}" -eq 1 ]; then
+  backupFile="${configFile}.bak.$(date +%Y%m%d%H%M%S)"
+  cp "${configFile}" "${backupFile}"
+  cp "${repoDir}/config/motd_config.zsh" "${configFile}"
+  configStatus="refreshed"
+else
+  configStatus="preserved"
 fi
 
 if [ ! -f "${zshrcFile}" ]; then
@@ -39,4 +54,12 @@ fi
 
 echo "mac-motd installed."
 echo "Config: ${configFile}"
+if [ "${configStatus}" = "created" ]; then
+  echo "Config status: created from template"
+elif [ "${configStatus}" = "refreshed" ]; then
+  echo "Config status: refreshed from template"
+  echo "Backup: ${backupFile}"
+else
+  echo "Config status: preserved existing file"
+fi
 echo "Reopen terminal or run: source ~/.zshrc"
