@@ -10,7 +10,7 @@ Please do not open a public issue for security vulnerabilities.
 
 Report privately to:
 
-- `dbarahona@me.com`
+- `douglas.barahona@me.com`
 
 Please include:
 

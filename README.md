@@ -2,10 +2,13 @@
 
 Modular MOTD for macOS + zsh, with user config in `~/.douz.io/motd_config.zsh`.
 
+![mac-motd screenshot](images/screen2.png)
+
 ## What This Repo Provides
 
 - `motd.sh`: runtime module loader.
 - `modules/*.sh`: output modules.
+- `modules/README.md`: module catalog, dependencies, and authoring notes.
 - `install.sh`: idempotent installer (shell hook + user config).
 - `uninstall.sh`: clean uninstaller (`--purge-config` supported).
 - `bin/mac-motd`: command wrapper (`run`, `install`, `uninstall`, `doctor`).
@@ -124,58 +127,6 @@ What is covered:
 - uninstall behavior (preserve vs purge config)
 - runtime behavior for missing modules/dependencies
 
-## CI
-
-GitHub Actions workflow:
-
-- `.github/workflows/ci.yml`
-
-CI runs on PRs and `master` pushes:
-
-- zsh syntax checks
-- `shellcheck`
-- `./tests/run.sh`
-- Dependabot updates for GitHub Actions are configured in `.github/dependabot.yml`.
-
-## Packaging and Sharing via `brew.douz.io`
-
-Use `brew.douz.io` as your documentation/index domain for all future taps.
-
-Recommended setup:
-
-1. Create tap repo (for example `douz/homebrew-tap`).
-2. Create repository secret `HOMEBREW_TAP_TOKEN` in `douz/mac-motd` with write access to `douz/homebrew-tap`.
-3. Publish a tagged release in this repo (for example `v0.1.0`).
-4. Let the publish workflow update tap formula automatically.
-5. In DNS, point `brew.douz.io` to your Pages/docs host and publish install docs for all taps.
-
-This pattern keeps one stable domain (`brew.douz.io`) for discovery while using GitHub tap repos for actual package distribution.
-
-## Homebrew Tap Publish Action
-
-Workflow:
-
-- `.github/workflows/publish-homebrew-tap.yml`
-
-Triggers:
-
-- push tag `v*` (for example `v0.1.0`)
-- manual `workflow_dispatch` with a tag input
-
-What it does:
-
-1. Downloads release tarball for the selected tag.
-2. Calculates SHA256.
-3. Checks out `douz/homebrew-tap`.
-4. Generates/updates `Formula/mac-motd.rb`.
-5. Commits and pushes the formula update.
-
-Manual trigger example:
-
-1. Open **Actions** -> **Publish Homebrew Tap Formula**.
-2. Click **Run workflow**.
-3. Enter tag like `v0.1.0`.
-
 ## Release Process
 
 1. Update `CHANGELOG.md` under `[Unreleased]`.
@@ -202,6 +153,8 @@ git push origin v0.1.0
 Add new modules in `modules/<name>.sh`, then include them in `modulesArray` inside `~/.douz.io/motd_config.zsh`.
 
 If a module requires commands, add its dependencies in `motd.sh` under `moduleRequirements`.
+
+Keep [modules/README.md](modules/README.md) in sync whenever you add, remove, or change a module so contributors can see the current runtime behavior and dependencies in one place.
 
 ## Community and Governance
 
