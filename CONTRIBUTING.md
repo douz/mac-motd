@@ -16,8 +16,9 @@ zsh -n motd.sh install.sh uninstall.sh bin/mac-motd modules/*.sh config/*.zsh
 
 1. Keep changes focused and small.
 2. Add or update tests when behavior changes.
-3. Update README/docs when commands, install flow, or config changes.
-4. Ensure CI is green before requesting review.
+3. Update `README.md` when commands, install flow, screenshots, or config change.
+4. Update `modules/README.md` whenever a module is added, removed, reordered, or its dependencies/behavior change.
+5. Ensure CI is green before requesting review.
 
 ## Commit Messages
 

@@ -24,7 +24,7 @@ Project maintainers are responsible for clarifying and enforcing this code of co
 
 ## Reporting
 
-Report issues to: `dbarahona@me.com`
+Report issues to: `douglas.barahona@me.com`
 
 ## Attribution
 
