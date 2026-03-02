@@ -6,6 +6,11 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-03-02
+
+### Fixed
+- `hdd_usage` now reports the writable APFS data volume on macOS instead of the sealed system volume, which fixes incorrect usage totals like `16 GB out of 465 G` on split-volume systems.
+
 ## [0.1.1] - 2026-03-02
 
 ### Added

@@ -5,7 +5,17 @@ barWidth=50
 warnDiscUsage=90
 barClear="\e[0m"
 barContent=""
-diskStats="$(df -g / | awk 'NR==2 { print $2" "$3" "$5 }')"
+diskMount="${DOUZ_HDD_MOUNT_POINT:-}"
+
+if [ -z "${diskMount}" ]; then
+    if df -g /System/Volumes/Data >/dev/null 2>&1; then
+        diskMount="/System/Volumes/Data"
+    else
+        diskMount="/"
+    fi
+fi
+
+diskStats="$(df -g "${diskMount}" | awk 'NR==2 { print $2" "$3" "$5 }')"
 diskSize="$(echo "$diskStats" | awk '{ print $1 }')"
 diskUsage="$(echo "$diskStats" | awk '{ print $2 }')"
 diskUsagePercent="$(echo "$diskStats" | awk '{ gsub("%", "", $3); print $3 }')"
