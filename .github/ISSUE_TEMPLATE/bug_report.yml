@@ -24,8 +24,8 @@ body:
     attributes:
       label: Install method
       options:
-        - Homebrew
-        - Source install
+        - Install script
+        - Manual setup
   - type: textarea
     id: steps
     attributes:

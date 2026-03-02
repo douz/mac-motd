@@ -20,7 +20,7 @@ jobs:
             ## Install
 
             ```bash
-            brew tap douz/tap
-            brew install mac-motd
-            mac-motd install
+            git clone git@github.com:douz/mac-motd.git
+            cd mac-motd
+            ./install.sh
             ```
