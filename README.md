@@ -26,6 +26,16 @@ brew install mac-motd
 mac-motd install
 ```
 
+For upgrades after a new release:
+
+```bash
+brew update
+brew upgrade mac-motd
+mac-motd install
+```
+
+`brew upgrade` updates the packaged files, and `mac-motd install` refreshes the user runtime in `~/.local/share/douz-motd` without overwriting your existing `~/.douz.io/motd_config.zsh`.
+
 ### Option 2: Local/Source install
 
 ```bash
@@ -33,6 +43,15 @@ git clone git@github.com:douz/mac-motd.git
 cd mac-motd
 ./install.sh
 ```
+
+For upgrades after pulling a new release or updated branch:
+
+```bash
+git pull --ff-only
+./install.sh
+```
+
+This refreshes the installed runtime in `~/.local/share/douz-motd` and preserves your existing `~/.douz.io/motd_config.zsh` unless you explicitly choose `./install.sh --refresh-config`.
 
 ## User Config Location
 
@@ -43,6 +62,14 @@ The installer creates:
 ```
 
 Default content is sourced from `config/motd_config.zsh`.
+
+Running `mac-motd install` again preserves your existing config. If you intentionally want to replace it with the latest template, run:
+
+```bash
+mac-motd install --refresh-config
+```
+
+That command first creates a timestamped backup next to your config, for example `~/.douz.io/motd_config.zsh.bak.20260302091500`.
 
 Example:
 
@@ -63,6 +90,7 @@ bannerText="Douz"
 ```bash
 mac-motd run
 mac-motd install
+mac-motd install --refresh-config
 mac-motd uninstall
 mac-motd uninstall --purge-config
 mac-motd doctor
@@ -133,8 +161,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 3. GitHub Actions will:

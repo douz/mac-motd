@@ -11,7 +11,7 @@ Usage: mac-motd <command>
 
 Commands:
   run            Run the MOTD output
-  install        Install motd runner and shell hook
+  install        Install motd runner and shell hook (`--refresh-config` backs up and replaces config)
   uninstall      Uninstall motd runner and shell hook
   doctor         Validate required tools and config
 USAGE
@@ -22,7 +22,8 @@ case "${1:-}" in
     exec "${baseDir}/motd.sh"
     ;;
   install)
-    exec "${baseDir}/install.sh"
+    shift || true
+    exec "${baseDir}/install.sh" "$@"
     ;;
   uninstall)
     shift || true

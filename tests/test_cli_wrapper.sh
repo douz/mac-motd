@@ -18,4 +18,11 @@ HOME="$TEST_HOME/home" "$BIN_DIR/mac-motd" install
 [[ -f "$TEST_HOME/home/.local/share/douz-motd/motd.sh" ]]
 [[ -f "$TEST_HOME/home/.douz.io/motd_config.zsh" ]]
 
+echo "# wrapper-custom" >> "$TEST_HOME/home/.douz.io/motd_config.zsh"
+HOME="$TEST_HOME/home" "$BIN_DIR/mac-motd" install --refresh-config
+
+BACKUP_FILE="$(find "$TEST_HOME/home/.douz.io" -maxdepth 1 -name 'motd_config.zsh.bak.*' | head -n 1)"
+[[ -n "$BACKUP_FILE" ]]
+grep -q '# wrapper-custom' "$BACKUP_FILE"
+
 echo "test_cli_wrapper.sh: PASS"

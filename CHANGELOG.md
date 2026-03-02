@@ -6,6 +6,14 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-03-02
+
+### Changed
+- Documented the recommended Homebrew upgrade flow as `brew update`, `brew upgrade mac-motd`, and `mac-motd install`.
+
+### Fixed
+- `mac-motd install` now makes config preservation explicit and supports `--refresh-config`, which backs up the existing user config before replacing it with the latest template.
+
 ## [0.1.2] - 2026-03-02
 
 ### Fixed

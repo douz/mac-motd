@@ -1,7 +1,7 @@
 class MacMotd < Formula
   desc "Modular zsh MOTD for macOS"
   homepage "https://github.com/douz/mac-motd"
-  url "https://github.com/douz/mac-motd/archive/refs/tags/v0.1.2.tar.gz"
+  url "https://github.com/douz/mac-motd/archive/refs/tags/v0.1.3.tar.gz"
   sha256 "REPLACE_WITH_RELEASE_SHA256"
   license "MIT"
 
@@ -22,6 +22,9 @@ class MacMotd < Formula
 
       This creates user config at:
         ~/.douz.io/motd_config.zsh
+
+      To refresh the config template safely:
+        mac-motd install --refresh-config
 
       To uninstall:
         mac-motd uninstall
