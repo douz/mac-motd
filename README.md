@@ -18,7 +18,7 @@ Modular MOTD for macOS + zsh, with user config in `~/.douz.io/motd_config.zsh`.
 
 ### Option 1: Homebrew Tap (recommended)
 
-Use your tap (hosted in GitHub, documented under `brew.douz.io`):
+Use your tap (documented at `motd.douz.io`):
 
 ```bash
 brew tap douz/tap
