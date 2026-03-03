@@ -6,9 +6,9 @@ on:
       - master
     paths:
       - .github/workflows/pages.yml
-      - .nojekyll
-      - CNAME
-      - index.html
+      - site/.nojekyll
+      - site/CNAME
+      - site/index.html
       - images/**
   workflow_dispatch:
 
@@ -31,9 +31,9 @@ jobs:
       - name: Stage site files
         run: |
           mkdir -p public/images
-          cp index.html public/index.html
-          cp CNAME public/CNAME
-          cp .nojekyll public/.nojekyll
+          cp site/index.html public/index.html
+          cp site/CNAME public/CNAME
+          cp site/.nojekyll public/.nojekyll
           cp images/screen1.png public/images/screen1.png
           cp images/screen2.png public/images/screen2.png
 
