@@ -25,7 +25,7 @@ Prints a random-color `figlet` banner using the fonts in `fonts/`.
 Prints disk, CPU, and GPU temperatures with threshold-based highlighting.
 
 - Config: `MOTD_DISK_DEVICE` env var (falls back to the root disk detected by `motd.sh`)
-- Requires: `smartctl`, `osx-cpu-temp`
+- Requires: `smartctl`, `smctemp`
 - Notes: disk temperature shows `N/A` if SMART output does not expose a numeric temperature
 
 ### `hdd_usage.sh`
@@ -54,7 +54,7 @@ Prints calendar events for today and tomorrow.
 
 Prints macOS version, hardware details, memory information, and CPU/GPU temperatures.
 
-- Requires: `sw_vers`, `sysctl`, `system_profiler`, `osx-cpu-temp`
+- Requires: `sw_vers`, `sysctl`, `system_profiler`, `smctemp`
 - Notes: available in `moduleRequirements`, but not enabled by default
 
 ## Adding or Changing Modules

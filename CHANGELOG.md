@@ -6,6 +6,16 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-03-04
+
+### Changed
+- Replaced `osx-cpu-temp` with `smctemp` in temperature modules and dependency declarations.
+- Documented manual/source install dependency requirements explicitly in the README.
+
+### Fixed
+- Temperature modules now handle missing/non-numeric SMC sensor output safely and show `N/A` when values are unavailable.
+- `hdd_usage` output formatting now prints compact units (`369GB out of 465GB`).
+
 ## [0.1.3] - 2026-03-02
 
 ### Changed

@@ -38,6 +38,12 @@ mac-motd install
 
 ### Option 2: Local/Source install
 
+Install module dependencies first (manual install does not install Homebrew dependencies automatically):
+
+```bash
+brew install figlet ical-buddy smctemp smartmontools
+```
+
 ```bash
 git clone git@github.com:douz/mac-motd.git
 cd mac-motd
@@ -130,13 +136,13 @@ The following tools are used by modules and should be installed when needed:
 
 - `figlet`
 - `ical-buddy`
-- `osx-cpu-temp`
+- `smctemp`
 - `smartmontools`
 
 Install with:
 
 ```bash
-brew install figlet ical-buddy osx-cpu-temp smartmontools
+brew install figlet ical-buddy smctemp smartmontools
 ```
 
 The runtime skips modules whose dependencies are missing and prints a warning.
@@ -161,8 +167,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 3. GitHub Actions will:
