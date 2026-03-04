@@ -6,14 +6,6 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
-## [0.1.5] - 2026-03-04
-
-### Fixed
-- Homebrew dependency resolution for temperature support now uses `narugit/tap/smctemp` so upgrades can install the `smctemp` formula correctly.
-
-### Changed
-- Updated install documentation to include tapping `narugit/tap` before installing dependencies.
-
 ## [0.1.4] - 2026-03-04
 
 ### Changed
