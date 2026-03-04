@@ -10,6 +10,10 @@ on:
         description: 'Tag to publish (e.g. v0.1.0)'
         required: true
 
+env:
+  # Bump only when updating Formula behavior/dependencies without a new upstream tag.
+  FORMULA_REVISION: '1'
+
 jobs:
   publish-formula:
     runs-on: ubuntu-latest
@@ -31,6 +35,10 @@ jobs:
             v*) ;;
             *) echo "Tag must start with v"; exit 1 ;;
           esac
+          if ! echo "${FORMULA_REVISION}" | grep -Eq '^[0-9]+$'; then
+            echo "FORMULA_REVISION must be a non-negative integer."
+            exit 1
+          fi
 
       - name: Download source tarball
         run: |
@@ -57,11 +65,12 @@ jobs:
             homepage "https://github.com/douz/mac-motd"
             url "${TARBALL_URL}"
             sha256 "${TARBALL_SHA256}"
+            $( [ "${FORMULA_REVISION}" -gt 0 ] && echo "revision ${FORMULA_REVISION}" )
             license "MIT"
 
             depends_on "figlet"
             depends_on "ical-buddy"
-            depends_on "osx-cpu-temp"
+            depends_on "smctemp"
             depends_on "smartmontools"
 
             def install
@@ -100,5 +109,9 @@ jobs:
             echo "No formula changes detected."
             exit 0
           fi
-          git commit -m "chore: update mac-motd formula for ${TAG}"
+          if [ "${FORMULA_REVISION}" -gt 0 ]; then
+            git commit -m "chore: update mac-motd formula for ${TAG} (revision ${FORMULA_REVISION})"
+          else
+            git commit -m "chore: update mac-motd formula for ${TAG}"
+          fi
           git push
