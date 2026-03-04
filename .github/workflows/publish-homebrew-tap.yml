@@ -20,6 +20,9 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Checkout mac-motd repository
+        uses: actions/checkout@v6
+
       - name: Determine release tag
         id: tag
         run: |
