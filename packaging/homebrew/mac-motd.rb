@@ -9,6 +9,7 @@ __FORMULA_REVISION_LINE__
   depends_on "figlet"
   depends_on "ical-buddy"
   depends_on "ismc"
+  depends_on "jq"
   depends_on "smartmontools"
 
   def install

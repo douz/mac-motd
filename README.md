@@ -42,7 +42,7 @@ Install module dependencies first (manual install does not install Homebrew depe
 
 ```bash
 brew tap douz/tap
-brew install figlet ical-buddy ismc smartmontools
+brew install figlet ical-buddy ismc jq smartmontools
 ```
 
 ```bash
@@ -138,13 +138,14 @@ The following tools are used by modules and should be installed when needed:
 - `figlet`
 - `ical-buddy`
 - `ismc` (provides the `iSMC` command)
+- `jq`
 - `smartmontools`
 
 Install with:
 
 ```bash
 brew tap douz/tap
-brew install figlet ical-buddy ismc smartmontools
+brew install figlet ical-buddy ismc jq smartmontools
 ```
 
 The runtime skips modules whose dependencies are missing and prints a warning.
@@ -169,8 +170,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.6
-git push origin v0.1.6
+git tag v0.1.7
+git push origin v0.1.7
 ```
 
 3. GitHub Actions will:

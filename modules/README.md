@@ -22,11 +22,11 @@ Prints a random-color `figlet` banner using the fonts in `fonts/`.
 
 ### `temperature.sh`
 
-Prints disk, CPU, and GPU temperatures with threshold-based highlighting.
+Prints disk, CPU, GPU, and memory temperatures with threshold-based highlighting.
 
 - Config: `MOTD_DISK_DEVICE` env var (falls back to the root disk detected by `motd.sh`)
-- Requires: `smartctl`, `iSMC`
-- Notes: `iSMC` is provided by the Homebrew `ismc` formula; disk temperature shows `N/A` if SMART output does not expose a numeric temperature
+- Requires: `smartctl`, `iSMC`, `jq`
+- Notes: `iSMC` is provided by the Homebrew `ismc` formula; output uses grouped key selection with optional secondary values (for CPU/GPU/Memory) and 2-decimal Celsius formatting
 
 ### `hdd_usage.sh`
 
@@ -52,10 +52,10 @@ Prints calendar events for today and tomorrow.
 
 ### `system_info.sh`
 
-Prints macOS version, hardware details, memory information, and CPU/GPU temperatures.
+Prints macOS version, hardware details, memory information, and grouped CPU/GPU/Memory temperatures.
 
-- Requires: `sw_vers`, `sysctl`, `system_profiler`, `iSMC`
-- Notes: `iSMC` is provided by the Homebrew `ismc` formula; module is available in `moduleRequirements` but not enabled by default
+- Requires: `sw_vers`, `sysctl`, `system_profiler`, `iSMC`, `jq`
+- Notes: `iSMC` is provided by the Homebrew `ismc` formula; module is available in `moduleRequirements`, but not enabled by default
 
 ## Adding or Changing Modules
 
