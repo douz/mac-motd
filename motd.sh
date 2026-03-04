@@ -19,8 +19,8 @@ moduleRequirements=(
   battery "pmset"
   calendar_events "icalBuddy"
   hdd_usage "df"
-  system_info "sw_vers sysctl system_profiler smctemp"
-  temperature "smartctl smctemp"
+  system_info "sw_vers sysctl system_profiler iSMC"
+  temperature "smartctl iSMC"
   fastfetch "fastfetch"
 )
 

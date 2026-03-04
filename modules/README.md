@@ -25,8 +25,8 @@ Prints a random-color `figlet` banner using the fonts in `fonts/`.
 Prints disk, CPU, and GPU temperatures with threshold-based highlighting.
 
 - Config: `MOTD_DISK_DEVICE` env var (falls back to the root disk detected by `motd.sh`)
-- Requires: `smartctl`, `smctemp`
-- Notes: `smctemp` is provided by `narugit/tap/smctemp` when installed via Homebrew; disk temperature shows `N/A` if SMART output does not expose a numeric temperature
+- Requires: `smartctl`, `iSMC`
+- Notes: `iSMC` is provided by the Homebrew `ismc` formula; disk temperature shows `N/A` if SMART output does not expose a numeric temperature
 
 ### `hdd_usage.sh`
 
@@ -54,8 +54,8 @@ Prints calendar events for today and tomorrow.
 
 Prints macOS version, hardware details, memory information, and CPU/GPU temperatures.
 
-- Requires: `sw_vers`, `sysctl`, `system_profiler`, `smctemp`
-- Notes: `smctemp` is provided by `narugit/tap/smctemp` when installed via Homebrew; module is available in `moduleRequirements` but not enabled by default
+- Requires: `sw_vers`, `sysctl`, `system_profiler`, `iSMC`
+- Notes: `iSMC` is provided by the Homebrew `ismc` formula; module is available in `moduleRequirements` but not enabled by default
 
 ## Adding or Changing Modules
 

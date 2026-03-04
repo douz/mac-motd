@@ -14,11 +14,22 @@ memorySpeed=$(system_profiler SPMemoryDataType | grep -e "Speed" | uniq | awk '{
 warnTemperature=60
 criticalTemperature=80
 clear="\e[0m"
-smcOutput="$(smctemp 2>/dev/null)"
+smcOutput="$(iSMC temp -o table 2>/dev/null)"
 
 extract_temp() {
     local pattern="$1"
-    echo "$smcOutput" | awk -v pattern="$pattern" 'BEGIN { IGNORECASE=1 } $0 ~ pattern { if (match($0, /[0-9]+(\.[0-9]+)?/)) { print substr($0, RSTART, RLENGTH); exit } }'
+    echo "$smcOutput" | awk -v pattern="$pattern" '
+        tolower($0) ~ tolower(pattern) {
+            if (match($0, /[0-9]+(\.[0-9]+)?[[:space:]]*(°C|°F|C|F)/)) {
+                value = substr($0, RSTART, RLENGTH)
+                gsub(/[[:space:]]*(°C|°F|C|F)/, "", value)
+                print value
+                exit
+            } else if (match($0, /[0-9]+(\.[0-9]+)?/)) {
+                print substr($0, RSTART, RLENGTH)
+                exit
+            }
+        }'
 }
 
 format_temp() {
@@ -39,7 +50,7 @@ temp_to_int() {
     fi
 }
 
-cpuTemperatureRaw="$(extract_temp "(cpu|tc[[:alnum:]]+)")"
+cpuTemperatureRaw="$(extract_temp "(cpu|performance core|efficiency core|tc[[:alnum:]]+|tp[[:alnum:]]+|te[[:alnum:]]+|tf[[:alnum:]]+)")
 if [ -z "${cpuTemperatureRaw}" ]; then
     cpuTemperatureRaw="$(echo "$smcOutput" | awk 'match($0, /[0-9]+(\.[0-9]+)?/) { print substr($0, RSTART, RLENGTH); exit }')"
 fi

@@ -8,7 +8,7 @@ __FORMULA_REVISION_LINE__
 
   depends_on "figlet"
   depends_on "ical-buddy"
-  depends_on "narugit/tap/smctemp"
+  depends_on "ismc"
   depends_on "smartmontools"
 
   def install

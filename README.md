@@ -12,7 +12,7 @@ Modular MOTD for macOS + zsh, with user config in `~/.douz.io/motd_config.zsh`.
 - `install.sh`: idempotent installer (shell hook + user config).
 - `uninstall.sh`: clean uninstaller (`--purge-config` supported).
 - `bin/mac-motd`: command wrapper (`run`, `install`, `uninstall`, `doctor`).
-- `packaging/homebrew/mac-motd.rb`: formula template for your tap.
+- `packaging/homebrew/*.rb`: Homebrew formula templates for your tap (`mac-motd` and `ismc`).
 
 ## Installation
 
@@ -22,7 +22,6 @@ Use your tap (documented at `motd.douz.io`):
 
 ```bash
 brew tap douz/tap
-brew tap narugit/tap
 brew install mac-motd
 mac-motd install
 ```
@@ -31,7 +30,6 @@ For upgrades after a new release:
 
 ```bash
 brew update
-brew tap narugit/tap
 brew upgrade mac-motd
 mac-motd install
 ```
@@ -43,8 +41,8 @@ mac-motd install
 Install module dependencies first (manual install does not install Homebrew dependencies automatically):
 
 ```bash
-brew tap narugit/tap
-brew install figlet ical-buddy narugit/tap/smctemp smartmontools
+brew tap douz/tap
+brew install figlet ical-buddy ismc smartmontools
 ```
 
 ```bash
@@ -139,14 +137,14 @@ The following tools are used by modules and should be installed when needed:
 
 - `figlet`
 - `ical-buddy`
-- `narugit/tap/smctemp` (provides the `smctemp` command)
+- `ismc` (provides the `iSMC` command)
 - `smartmontools`
 
 Install with:
 
 ```bash
-brew tap narugit/tap
-brew install figlet ical-buddy narugit/tap/smctemp smartmontools
+brew tap douz/tap
+brew install figlet ical-buddy ismc smartmontools
 ```
 
 The runtime skips modules whose dependencies are missing and prints a warning.
@@ -171,8 +169,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.1.6
+git push origin v0.1.6
 ```
 
 3. GitHub Actions will:

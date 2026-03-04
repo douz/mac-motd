@@ -12,7 +12,7 @@ on:
 
 env:
   # Bump only when updating Formula behavior/dependencies without a new upstream tag.
-  FORMULA_REVISION: '1'
+  FORMULA_REVISION: '0'
 
 jobs:
   publish-formula:
@@ -78,13 +78,14 @@ jobs:
               print
             }' \
             packaging/homebrew/mac-motd.rb > homebrew-tap/Formula/mac-motd.rb
+          cp packaging/homebrew/ismc.rb homebrew-tap/Formula/ismc.rb
 
       - name: Commit and push formula update
         run: |
           cd homebrew-tap
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add Formula/mac-motd.rb
+          git add Formula/mac-motd.rb Formula/ismc.rb
           if git diff --cached --quiet; then
             echo "No formula changes detected."
             exit 0
