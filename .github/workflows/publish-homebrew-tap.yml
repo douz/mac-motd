@@ -70,7 +70,7 @@ jobs:
 
             depends_on "figlet"
             depends_on "ical-buddy"
-            depends_on "smctemp"
+            depends_on "narugit/tap/smctemp"
             depends_on "smartmontools"
 
             def install

@@ -41,7 +41,8 @@ mac-motd install
 Install module dependencies first (manual install does not install Homebrew dependencies automatically):
 
 ```bash
-brew install figlet ical-buddy smctemp smartmontools
+brew tap narugit/tap
+brew install figlet ical-buddy narugit/tap/smctemp smartmontools
 ```
 
 ```bash
@@ -136,13 +137,14 @@ The following tools are used by modules and should be installed when needed:
 
 - `figlet`
 - `ical-buddy`
-- `smctemp`
+- `narugit/tap/smctemp` (provides the `smctemp` command)
 - `smartmontools`
 
 Install with:
 
 ```bash
-brew install figlet ical-buddy smctemp smartmontools
+brew tap narugit/tap
+brew install figlet ical-buddy narugit/tap/smctemp smartmontools
 ```
 
 The runtime skips modules whose dependencies are missing and prints a warning.
@@ -167,8 +169,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.1.5
+git push origin v0.1.5
 ```
 
 3. GitHub Actions will:
