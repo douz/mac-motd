@@ -6,8 +6,18 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-03-04
+
+### Added
+- Added a first-party `ismc` Homebrew formula template under `packaging/homebrew/ismc.rb` for publishing to `douz/homebrew-tap`.
+
 ### Changed
-- Updated install and upgrade documentation to explicitly include third-party tap setup for `narugit/tap/smctemp`.
+- Replaced `smctemp` usage with `iSMC` in temperature modules and module dependency checks.
+- Updated Homebrew publishing workflow to sync both `mac-motd.rb` and `ismc.rb` to the tap from local templates.
+- Updated install/upgrade documentation (including `motd.douz.io`) to use first-party tap dependencies only.
+
+### Fixed
+- Eliminated third-party tap dependency failures by removing `narugit/tap/smctemp` from the install/upgrade path.
 
 ## [0.1.4] - 2026-03-04
 
