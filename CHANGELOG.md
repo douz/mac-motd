@@ -6,6 +6,15 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-03-04
+
+### Changed
+- Refined grouped iSMC temperature selection labels and filtering to avoid non-disk sensors being surfaced as disk temperatures.
+- Kept per-sensor, per-row temperature output behavior for CPU, GPU, memory, and disk so color thresholds apply to each value independently.
+
+### Added
+- Added test fixtures for both Intel and Apple Silicon iSMC output paths in the temperature module test suite.
+
 ## [0.1.7] - 2026-03-04
 
 ### Changed
