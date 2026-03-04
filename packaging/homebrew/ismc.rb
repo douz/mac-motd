@@ -1,14 +1,12 @@
 class Ismc < Formula
   desc "Apple SMC information tool"
   homepage "https://github.com/dkorunic/iSMC"
-  url "https://github.com/dkorunic/iSMC/archive/refs/tags/v0.11.1.tar.gz"
-  sha256 "21b14179c5e25648e4647b131704d3b2959091bff18f9a237847fd5c53efcc95"
+  url "https://github.com/dkorunic/iSMC/releases/download/v0.11.1/iSMC_Darwin_all.tar.gz"
+  sha256 "c1e44a2b6d56b27f34b23e9a4e254f0c52bbb1d30e2fdb0fdd80fa219ef2ac13"
   license "GPL-3.0-only"
 
-  depends_on "go" => :build
-
   def install
-    system "go", "build", *std_go_args(output: bin/"iSMC"), "."
+    bin.install "iSMC"
   end
 
   test do
