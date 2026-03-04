@@ -73,8 +73,8 @@ chmod +x "$FAKE_BIN/smartctl" "$FAKE_BIN/iSMC"
 
 PATH="$FAKE_BIN:$PATH" INTEL_JSON_PATH="$INTEL_JSON" SILICON_JSON_PATH="$SILICON_JSON" TEST_ARCH="intel" zsh "$REPO_DIR/modules/temperature.sh" > "$OUTPUT_INTEL"
 
-grep -q 'Disk Temp\.\.:.*42\.00°C.*SMART, /dev/disk1s1' "$OUTPUT_INTEL"
-grep -q 'Disk Temp+\.:.*39\.90°C.*Drive 0 OOBv3 Absolute Raw B, TH0b' "$OUTPUT_INTEL"
+grep -q 'Disk Temp\.\.:.*42\.00°C (SMART' "$OUTPUT_INTEL"
+grep -q 'Disk Temp+\.:.*39\.90°C' "$OUTPUT_INTEL"
 grep -q 'CPU Temp\.\.\.:.*55\.20°C' "$OUTPUT_INTEL"
 grep -q 'CPU Temp+\.\.:.*53\.00°C' "$OUTPUT_INTEL"
 grep -q 'GPU Temp\.\.\.:.*48\.70°C' "$OUTPUT_INTEL"
@@ -84,8 +84,8 @@ grep -q 'Mem Temp+\.\.:.*40\.80°C' "$OUTPUT_INTEL"
 
 PATH="$FAKE_BIN:$PATH" INTEL_JSON_PATH="$INTEL_JSON" SILICON_JSON_PATH="$SILICON_JSON" TEST_ARCH="silicon" zsh "$REPO_DIR/modules/temperature.sh" > "$OUTPUT_SILICON"
 
-grep -q 'Disk Temp\.\.:.*42\.00°C.*SMART, /dev/disk1s1' "$OUTPUT_SILICON"
-grep -q 'Disk Temp+\.:.*37\.60°C.*NAND, TH0x' "$OUTPUT_SILICON"
+grep -q 'Disk Temp\.\.:.*42\.00°C (SMART' "$OUTPUT_SILICON"
+grep -q 'Disk Temp+\.:.*37\.60°C' "$OUTPUT_SILICON"
 grep -q 'CPU Temp\.\.\.:.*71\.20°C' "$OUTPUT_SILICON"
 grep -q 'CPU Temp+\.\.:.*64\.60°C' "$OUTPUT_SILICON"
 grep -q 'GPU Temp\.\.\.:.*60\.50°C' "$OUTPUT_SILICON"

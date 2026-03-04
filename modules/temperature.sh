@@ -209,72 +209,36 @@ if [ -z "$diskSmcPrimary" ] && [ -n "$diskSmcSecondary" ]; then
     diskSmcSecondary=""
 fi
 
-print_table_row() {
-    local label="$1"
-    local value="$2"
-    local source="$3"
-    local warn="$4"
-    local critical="$5"
-    local color valueText
-
-    color="$(temp_color "$value" "$warn" "$critical")"
-    if is_number "$value"; then
-        valueText="$(format_celsius "$value")"
-    else
-        valueText="N/A"
-    fi
-
-    printf "  %-12s | %b%-9s%b | %s\n" "${label}:" "${fontColor}${color} " "${valueText}" " ${clear}" "${source}"
-}
-
-print_sensor_table_row() {
-    local label="$1"
-    local row="$2"
-    local warn="$3"
-    local critical="$4"
-    local name key value
-
-    if [ -z "$row" ]; then
-        print_table_row "$label" "" "N/A" "$warn" "$critical"
-        return
-    fi
-
-    IFS=$'\t' read -r name key value _ <<<"$row"
-    print_table_row "$label" "$value" "${name}, ${key}" "$warn" "$critical"
-}
-
 # Print devices temperature
 echo -e "\e[1mSystem Temperature${clear}"
-echo "  Sensor       | Value     | Source"
-echo "  ------------ | --------- | -----------------------------------------------"
 
 if is_number "$diskSmartRaw"; then
-    print_table_row "Disk Temp.." "$diskSmartRaw" "SMART, ${diskDevice}" "$warnDiskTemperature" "$criticalDiskTemperature"
+    echo "$(render_numeric_row 'Disk Temp..' "$diskSmartRaw" "(SMART, ${diskDevice})" "$warnDiskTemperature" "$criticalDiskTemperature")"
 elif [ -n "$diskSmcPrimary" ]; then
-    print_sensor_table_row "Disk Temp.." "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature"
+    echo "$(render_sensor_row 'Disk Temp..' "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature")"
 else
-    print_table_row "Disk Temp.." "" "N/A" "$warnDiskTemperature" "$criticalDiskTemperature"
+    echo "$(render_numeric_row 'Disk Temp..' '' '' "$warnDiskTemperature" "$criticalDiskTemperature")"
 fi
 if [ -n "$diskSmcPrimary" ] && is_number "$diskSmartRaw"; then
-    print_sensor_table_row "Disk Temp+." "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature"
+    echo "$(render_sensor_row 'Disk Temp+.' "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature")"
 fi
 if [ -n "$diskSmcSecondary" ]; then
-    print_sensor_table_row "Disk Temp++" "$diskSmcSecondary" "$warnDiskTemperature" "$criticalDiskTemperature"
+    echo "$(render_sensor_row 'Disk Temp++' "$diskSmcSecondary" "$warnDiskTemperature" "$criticalDiskTemperature")"
 fi
 
-print_sensor_table_row "CPU Temp..." "$cpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature"
+echo "$(render_sensor_row 'CPU Temp...' "$cpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 if [ -n "$cpuSecondary" ]; then
-    print_sensor_table_row "CPU Temp+.." "$cpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature"
+    echo "$(render_sensor_row 'CPU Temp+..' "$cpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 fi
 
-print_sensor_table_row "GPU Temp..." "$gpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature"
+echo "$(render_sensor_row 'GPU Temp...' "$gpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 if [ -n "$gpuSecondary" ]; then
-    print_sensor_table_row "GPU Temp+.." "$gpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature"
+    echo "$(render_sensor_row 'GPU Temp+..' "$gpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 fi
 
-print_sensor_table_row "Mem Temp..." "$memPrimary" "$warnCpuTemperature" "$criticalCpuTemperature"
+echo "$(render_sensor_row 'Mem Temp...' "$memPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 if [ -n "$memSecondary" ]; then
-    print_sensor_table_row "Mem Temp+.." "$memSecondary" "$warnCpuTemperature" "$criticalCpuTemperature"
+    echo "$(render_sensor_row 'Mem Temp+..' "$memSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
 fi
 
 echo ""
