@@ -1,13 +1,13 @@
 class MacMotd < Formula
   desc "Modular zsh MOTD for macOS"
   homepage "https://github.com/douz/mac-motd"
-  url "https://github.com/douz/mac-motd/archive/refs/tags/v0.1.4.tar.gz"
+  url "https://github.com/douz/mac-motd/archive/refs/tags/v0.1.5.tar.gz"
   sha256 "REPLACE_WITH_RELEASE_SHA256"
   license "MIT"
 
   depends_on "figlet"
   depends_on "ical-buddy"
-  depends_on "smctemp"
+  depends_on "narugit/tap/smctemp"
   depends_on "smartmontools"
 
   def install
