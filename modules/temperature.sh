@@ -165,14 +165,14 @@ render_numeric_row() {
 
 smcRows="$(rows_from_json "$smcJson")"
 
-cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$')"
+cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa)$')"
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$')"
 fi
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu' '^tc[0-9a-z]+$')"
 fi
-cpuSecondary="$(pick_max "$smcRows" 'cpu core|cpu performance core|cpu efficiency core' '^(tc[0-9a-z]+c|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$' "$(row_key "$cpuPrimary")")"
+cpuSecondary="$(pick_max "$smcRows" 'cpu core|cpu performance core|cpu efficiency core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
 
 gpuPrimary="$(pick_max "$smcRows" 'gpu amd radeon|gpu intel graphics|^gpu [0-9]+' '^(tgdd|tcgc|tg[0-9a-z]+|tf1[0-9a-z]+)$')"
 if [ -z "$gpuPrimary" ]; then
@@ -182,9 +182,9 @@ gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink|^gpu [
 
 memPrimary="$(pick_max "$smcRows" 'memory proximity' '^ts0s$')"
 if [ -z "$memPrimary" ]; then
-    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$')"
+    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '')"
 fi
-memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$' "$(row_key "$memPrimary")")"
+memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '' "$(row_key "$memPrimary")")"
 
 if [ -z "$cpuPrimary" ] && [ -n "$cpuSecondary" ]; then
     cpuPrimary="$cpuSecondary"
