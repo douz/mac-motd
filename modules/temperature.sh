@@ -46,6 +46,22 @@ rows_from_json() {
     ' 2>/dev/null | awk -F '\t' 'tolower($1) !~ /trend|error/'
 }
 
+filter_storage_rows() {
+    local rows="$1"
+    echo "$rows" | awk -F '\t' '
+        {
+            name = tolower($1)
+            key = tolower($2)
+            # Keep only explicit storage sensors and avoid heatpipe-like keys.
+            if (name ~ /(^drive|^ssd|^nand|hdd bay|disk)/) {
+                print
+            } else if (key ~ /^th[0-9][0-9a-z]$/ || key ~ /^th[0-9][a-z]$/ || key ~ /^th0x$/ || key ~ /^th1x$/) {
+                print
+            }
+        }
+    '
+}
+
 pick_max() {
     local rows="$1"
     local nameRegex="$2"
@@ -187,8 +203,9 @@ if [ -z "$memPrimary" ] && [ -n "$memSecondary" ]; then
 fi
 
 diskSmartRaw="$(smartctl -a "${diskDevice}" 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Temperature/ {for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+(\.[0-9]+)?$/) last=$i} END{if (last != "") print last}')"
-diskSmcPrimary="$(pick_max "$smcRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$')"
-diskSmcSecondary="$(pick_max "$smcRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$' "$(row_key "$diskSmcPrimary")")"
+storageRows="$(filter_storage_rows "$smcRows")"
+diskSmcPrimary="$(pick_max "$storageRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$')"
+diskSmcSecondary="$(pick_max "$storageRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$' "$(row_key "$diskSmcPrimary")")"
 
 if [ -z "$diskSmcPrimary" ] && [ -n "$diskSmcSecondary" ]; then
     diskSmcPrimary="$diskSmcSecondary"
