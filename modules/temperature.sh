@@ -46,6 +46,19 @@ rows_from_json() {
     ' 2>/dev/null | awk -F '\t' 'tolower($1) !~ /trend|error/'
 }
 
+filter_storage_rows() {
+    local rows="$1"
+    echo "$rows" | awk -F '\t' '
+        {
+            name = tolower($1)
+            # Keep only explicit storage-labeled sensors.
+            if (name ~ /(^drive|^ssd|^nand|hdd bay|disk)/) {
+                print
+            }
+        }
+    '
+}
+
 pick_max() {
     local rows="$1"
     local nameRegex="$2"
@@ -120,28 +133,58 @@ temp_color() {
     fi
 }
 
+render_sensor_row() {
+    local label="$1"
+    local row="$2"
+    local warn="$3"
+    local critical="$4"
+    local value color text
+
+    value="$(row_value "$row")"
+    color="$(temp_color "$value" "$warn" "$critical")"
+    text="$(sensor_text "$row")"
+    echo "  ${label}: ${fontColor}${color} ${text} ${clear}"
+}
+
+render_numeric_row() {
+    local label="$1"
+    local value="$2"
+    local detail="$3"
+    local warn="$4"
+    local critical="$5"
+    local color text
+
+    color="$(temp_color "$value" "$warn" "$critical")"
+    if is_number "$value"; then
+        text="$(format_celsius "$value") ${detail}"
+    else
+        text="N/A"
+    fi
+    echo "  ${label}: ${fontColor}${color} ${text} ${clear}"
+}
+
 smcRows="$(rows_from_json "$smcJson")"
 
-cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$')"
+cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa)$')"
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$')"
 fi
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu' '^tc[0-9a-z]+$')"
 fi
-cpuSecondary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
+cpuSecondary="$(pick_max "$smcRows" 'cpu core|cpu performance core|cpu efficiency core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
 
 gpuPrimary="$(pick_max "$smcRows" 'gpu amd radeon|gpu intel graphics|^gpu [0-9]+' '^(tgdd|tcgc|tg[0-9a-z]+|tf1[0-9a-z]+)$')"
 if [ -z "$gpuPrimary" ]; then
     gpuPrimary="$(pick_max "$smcRows" 'gpu' '^tg[0-9a-z]+$')"
 fi
-gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink' '^tg[0-9a-z]*p$' "$(row_key "$gpuPrimary")")"
+gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink|^gpu [0-9]+' '^(tg[0-9a-z]*p|tg[0-9a-z]+|tf1[0-9a-z]+)$' "$(row_key "$gpuPrimary")")"
 
 memPrimary="$(pick_max "$smcRows" 'memory proximity' '^ts0s$')"
 if [ -z "$memPrimary" ]; then
-    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$')"
+    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '')"
 fi
-memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$' "$(row_key "$memPrimary")")"
+memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '' "$(row_key "$memPrimary")")"
 
 if [ -z "$cpuPrimary" ] && [ -n "$cpuSecondary" ]; then
     cpuPrimary="$cpuSecondary"
@@ -157,57 +200,45 @@ if [ -z "$memPrimary" ] && [ -n "$memSecondary" ]; then
 fi
 
 diskSmartRaw="$(smartctl -a "${diskDevice}" 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Temperature/ {for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+(\.[0-9]+)?$/) last=$i} END{if (last != "") print last}')"
-diskSmc="$(pick_max "$smcRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$')"
-diskSecondaryText=""
+storageRows="$(filter_storage_rows "$smcRows")"
+diskSmcPrimary="$(pick_max "$storageRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$')"
+diskSmcSecondary="$(pick_max "$storageRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$' "$(row_key "$diskSmcPrimary")")"
 
-if is_number "$diskSmartRaw"; then
-    diskPrimaryText="$(format_celsius "$diskSmartRaw") (SMART)"
-    diskPrimaryValue="$diskSmartRaw"
-    if [ -n "$diskSmc" ]; then
-        diskSecondaryText="$(sensor_text "$diskSmc")"
-    fi
-elif [ -n "$diskSmc" ]; then
-    diskPrimaryText="$(sensor_text "$diskSmc")"
-    diskPrimaryValue="$(row_value "$diskSmc")"
-else
-    diskPrimaryText="N/A"
-    diskPrimaryValue="$(row_value "$diskSmc")"
-fi
-
-cpuPrimaryValue="$(row_value "$cpuPrimary")"
-gpuPrimaryValue="$(row_value "$gpuPrimary")"
-memPrimaryValue="$(row_value "$memPrimary")"
-
-diskColor="$(temp_color "$diskPrimaryValue" "$warnDiskTemperature" "$criticalDiskTemperature")"
-cpuColor="$(temp_color "$cpuPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
-gpuColor="$(temp_color "$gpuPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
-memColor="$(temp_color "$memPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
-
-cpuText="$(sensor_text "$cpuPrimary")"
-if [ -n "$cpuSecondary" ]; then
-    cpuText="${cpuText} | $(sensor_text "$cpuSecondary")"
-fi
-
-gpuText="$(sensor_text "$gpuPrimary")"
-if [ -n "$gpuSecondary" ]; then
-    gpuText="${gpuText} | $(sensor_text "$gpuSecondary")"
-fi
-
-memText="$(sensor_text "$memPrimary")"
-if [ -n "$memSecondary" ]; then
-    memText="${memText} | $(sensor_text "$memSecondary")"
-fi
-
-if [ -n "$diskSecondaryText" ]; then
-    diskText="${diskPrimaryText} | ${diskSecondaryText}"
-else
-    diskText="$diskPrimaryText"
+if [ -z "$diskSmcPrimary" ] && [ -n "$diskSmcSecondary" ]; then
+    diskSmcPrimary="$diskSmcSecondary"
+    diskSmcSecondary=""
 fi
 
 # Print devices temperature
-echo -e "\e[1mSystem Temperature${clear}
-  Disk Temp.: ${fontColor}${diskColor} ${diskText} ${clear}
-  CPU Temp..: ${fontColor}${cpuColor} ${cpuText} ${clear}
-  GPU Temp..: ${fontColor}${gpuColor} ${gpuText} ${clear}
-  Mem Temp..: ${fontColor}${memColor} ${memText} ${clear}
-"
+echo -e "\e[1mSystem Temperature${clear}"
+
+if is_number "$diskSmartRaw"; then
+    echo "$(render_numeric_row 'Disk Temp..' "$diskSmartRaw" "(SMART, ${diskDevice})" "$warnDiskTemperature" "$criticalDiskTemperature")"
+elif [ -n "$diskSmcPrimary" ]; then
+    echo "$(render_sensor_row 'Disk Temp..' "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature")"
+else
+    echo "$(render_numeric_row 'Disk Temp..' '' '' "$warnDiskTemperature" "$criticalDiskTemperature")"
+fi
+if [ -n "$diskSmcPrimary" ] && is_number "$diskSmartRaw"; then
+    echo "$(render_sensor_row 'Disk Temp+.' "$diskSmcPrimary" "$warnDiskTemperature" "$criticalDiskTemperature")"
+fi
+if [ -n "$diskSmcSecondary" ]; then
+    echo "$(render_sensor_row 'Disk Temp++' "$diskSmcSecondary" "$warnDiskTemperature" "$criticalDiskTemperature")"
+fi
+
+echo "$(render_sensor_row 'CPU Temp...' "$cpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+if [ -n "$cpuSecondary" ]; then
+    echo "$(render_sensor_row 'CPU Temp+..' "$cpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+fi
+
+echo "$(render_sensor_row 'GPU Temp...' "$gpuPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+if [ -n "$gpuSecondary" ]; then
+    echo "$(render_sensor_row 'GPU Temp+..' "$gpuSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+fi
+
+echo "$(render_sensor_row 'Mem Temp...' "$memPrimary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+if [ -n "$memSecondary" ]; then
+    echo "$(render_sensor_row 'Mem Temp+..' "$memSecondary" "$warnCpuTemperature" "$criticalCpuTemperature")"
+fi
+
+echo ""

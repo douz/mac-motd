@@ -122,28 +122,37 @@ temp_color() {
     fi
 }
 
+render_sensor_row() {
+    local label="$1"
+    local row="$2"
+    local color text
+    color="$(temp_color "$(row_value "$row")")"
+    text="$(sensor_text "$row")"
+    echo "\t${label}: ${color}${text}${clear}"
+}
+
 smcRows="$(rows_from_json "$smcJson")"
 
-cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$')"
+cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa)$')"
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$')"
 fi
 if [ -z "$cpuPrimary" ]; then
     cpuPrimary="$(pick_max "$smcRows" 'cpu' '^tc[0-9a-z]+$')"
 fi
-cpuSecondary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
+cpuSecondary="$(pick_max "$smcRows" 'cpu core|cpu performance core|cpu efficiency core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
 
 gpuPrimary="$(pick_max "$smcRows" 'gpu amd radeon|gpu intel graphics|^gpu [0-9]+' '^(tgdd|tcgc|tg[0-9a-z]+|tf1[0-9a-z]+)$')"
 if [ -z "$gpuPrimary" ]; then
     gpuPrimary="$(pick_max "$smcRows" 'gpu' '^tg[0-9a-z]+$')"
 fi
-gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink' '^tg[0-9a-z]*p$' "$(row_key "$gpuPrimary")")"
+gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink|^gpu [0-9]+' '^(tg[0-9a-z]*p|tg[0-9a-z]+|tf1[0-9a-z]+)$' "$(row_key "$gpuPrimary")")"
 
 memPrimary="$(pick_max "$smcRows" 'memory proximity' '^ts0s$')"
 if [ -z "$memPrimary" ]; then
-    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$')"
+    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '')"
 fi
-memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$' "$(row_key "$memPrimary")")"
+memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '' "$(row_key "$memPrimary")")"
 
 if [ -z "$cpuPrimary" ] && [ -n "$cpuSecondary" ]; then
     cpuPrimary="$cpuSecondary"
@@ -158,29 +167,25 @@ if [ -z "$memPrimary" ] && [ -n "$memSecondary" ]; then
     memSecondary=""
 fi
 
-cpuText="$(sensor_text "$cpuPrimary")"
-if [ -n "$cpuSecondary" ]; then
-    cpuText="${cpuText} | $(sensor_text "$cpuSecondary")"
-fi
-gpuText="$(sensor_text "$gpuPrimary")"
-if [ -n "$gpuSecondary" ]; then
-    gpuText="${gpuText} | $(sensor_text "$gpuSecondary")"
-fi
-memText="$(sensor_text "$memPrimary")"
-if [ -n "$memSecondary" ]; then
-    memText="${memText} | $(sensor_text "$memSecondary")"
-fi
-
-cpuColor="$(temp_color "$(row_value "$cpuPrimary")")"
-gpuColor="$(temp_color "$(row_value "$gpuPrimary")")"
-memColor="$(temp_color "$(row_value "$memPrimary")")"
-
 # Print system info
 echo -e "\e[1mSystem Information ${modelIdentifier}\e[0m
 \tOS Version: ${osName} ${osVersion} ${osbuildVersion} ${kernelVersion}
 \tProcessor.: ${procesorName} ${procesorCores} Cores
-\tMemory....: $((${memorySize} / (1024**3))) GB ${memorySpeed} ${memoryType}
-\tCPU Temp..: ${cpuColor}${cpuText}${clear}
-\tGPU Temp..: ${gpuColor}${gpuText}${clear}
-\tMem Temp..: ${memColor}${memText}${clear}
-"
+\tMemory....: $((${memorySize} / (1024**3))) GB ${memorySpeed} ${memoryType}"
+
+echo "$(render_sensor_row 'CPU Temp...' "$cpuPrimary")"
+if [ -n "$cpuSecondary" ]; then
+    echo "$(render_sensor_row 'CPU Temp+..' "$cpuSecondary")"
+fi
+
+echo "$(render_sensor_row 'GPU Temp...' "$gpuPrimary")"
+if [ -n "$gpuSecondary" ]; then
+    echo "$(render_sensor_row 'GPU Temp+..' "$gpuSecondary")"
+fi
+
+echo "$(render_sensor_row 'Mem Temp...' "$memPrimary")"
+if [ -n "$memSecondary" ]; then
+    echo "$(render_sensor_row 'Mem Temp+..' "$memSecondary")"
+fi
+
+echo ""
