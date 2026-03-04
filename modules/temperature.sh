@@ -51,11 +51,8 @@ filter_storage_rows() {
     echo "$rows" | awk -F '\t' '
         {
             name = tolower($1)
-            key = tolower($2)
-            # Keep only explicit storage sensors and avoid heatpipe-like keys.
+            # Keep only explicit storage-labeled sensors.
             if (name ~ /(^drive|^ssd|^nand|hdd bay|disk)/) {
-                print
-            } else if (key ~ /^th[0-9][0-9a-z]$/ || key ~ /^th[0-9][a-z]$/ || key ~ /^th0x$/ || key ~ /^th1x$/) {
                 print
             }
         }
