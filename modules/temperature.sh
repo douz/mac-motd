@@ -6,89 +6,208 @@ criticalDiskTemperature=61
 warnCpuTemperature=60
 criticalCpuTemperature=80
 diskDevice="${MOTD_DISK_DEVICE:-/dev/disk1s1}"
-diskTemperature=$(smartctl -a "${diskDevice}" 2>/dev/null | awk '/Temperature/ {print $2; exit}')
-smcOutput="$(iSMC temp -o table 2>/dev/null)"
+smcJson="$(iSMC temp -o json 2>/dev/null)"
 fontColor="\e[97m"
 clear="\e[0m"
 
-extract_temp() {
-    local pattern="$1"
-    echo "$smcOutput" | awk -v pattern="$pattern" '
-        tolower($0) ~ tolower(pattern) {
-            if (match($0, /[0-9]+(\.[0-9]+)?[[:space:]]*(°C|°F|C|F)/)) {
-                value = substr($0, RSTART, RLENGTH)
-                gsub(/[[:space:]]*(°C|°F|C|F)/, "", value)
-                print value
-                exit
-            } else if (match($0, /[0-9]+(\.[0-9]+)?/)) {
-                print substr($0, RSTART, RLENGTH)
-                exit
-            }
-        }'
+is_number() {
+    local value="$1"
+    [[ -n "$value" ]] && echo "$value" | awk 'BEGIN { ok=1 } { if ($0 !~ /^[0-9]+(\.[0-9]+)?$/) ok=0 } END { exit !ok }'
 }
 
-format_temp() {
+format_celsius() {
     local value="$1"
-    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
-        awk -v v="$value" 'BEGIN { printf "%.1f°C", v }'
+    if is_number "$value"; then
+        awk -v v="$value" 'BEGIN { printf "%.2f°C", v }'
     else
         echo "N/A"
     fi
 }
 
-temp_to_int() {
+rows_from_json() {
+    local json="$1"
+    if [ -z "$json" ]; then
+        return
+    fi
+    echo "$json" | jq -r '
+      if type == "object" then
+        to_entries[]
+        | select(.value.quantity != null)
+        | [
+            .key,
+            (.value.key // ""),
+            (.value.quantity | tonumber),
+            (.value.unit // "°C")
+          ]
+        | @tsv
+      else
+        empty
+      end
+    ' 2>/dev/null | awk -F '\t' 'tolower($1) !~ /trend|error/'
+}
+
+pick_max() {
+    local rows="$1"
+    local nameRegex="$2"
+    local keyRegex="$3"
+    local excludeKey="${4:-}"
+
+    echo "$rows" | awk -F '\t' -v nre="$nameRegex" -v kre="$keyRegex" -v exk="$(echo "$excludeKey" | tr '[:upper:]' '[:lower:]')" '
+        BEGIN { best=-1e9 }
+        {
+            name=$1
+            key=$2
+            qty=$3
+            lname=tolower(name)
+            lkey=tolower(key)
+            nameMatch=(nre != "" && lname ~ nre)
+            keyMatch=(kre != "" && lkey ~ kre)
+            if ((nameMatch || keyMatch) && (exk == "" || lkey != exk)) {
+                q=qty + 0
+                if (q > best) {
+                    best=q
+                    bestName=name
+                    bestKey=key
+                    bestQty=q
+                    bestUnit=$4
+                }
+            }
+        }
+        END {
+            if (best > -1e8) {
+                printf "%s\t%s\t%.6f\t%s\n", bestName, bestKey, bestQty, bestUnit
+            }
+        }
+    '
+}
+
+row_value() {
+    local row="$1"
+    [ -z "$row" ] && return
+    echo "$row" | awk -F '\t' '{ print $3 }'
+}
+
+row_key() {
+    local row="$1"
+    [ -z "$row" ] && return
+    echo "$row" | awk -F '\t' '{ print $2 }'
+}
+
+sensor_text() {
+    local row="$1"
+    if [ -z "$row" ]; then
+        echo "N/A"
+        return
+    fi
+    local name key qty
+    IFS=$'\t' read -r name key qty _ <<<"$row"
+    echo "$(format_celsius "$qty") (${name}, ${key})"
+}
+
+temp_color() {
     local value="$1"
-    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
-        awk -v v="$value" 'BEGIN { print int(v) }'
+    local warn="$2"
+    local critical="$3"
+
+    if ! is_number "$value"; then
+        echo "\e[1;40m"
+    elif awk -v a="$value" -v b="$critical" 'BEGIN { exit !(a > b) }'; then
+        echo "\e[1;41m"
+    elif awk -v a="$value" -v b="$warn" 'BEGIN { exit !(a > b) }'; then
+        echo "\e[1;43m"
     else
-        echo ""
+        echo "\e[1;42m"
     fi
 }
 
-cpuTemperatureRaw="$(extract_temp "(cpu|performance core|efficiency core|tc[[:alnum:]]+|tp[[:alnum:]]+|te[[:alnum:]]+|tf[[:alnum:]]+)")"
-if [ -z "${cpuTemperatureRaw}" ]; then
-    cpuTemperatureRaw="$(echo "$smcOutput" | awk 'match($0, /[0-9]+(\.[0-9]+)?/) { print substr($0, RSTART, RLENGTH); exit }')"
+smcRows="$(rows_from_json "$smcJson")"
+
+cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$')"
+if [ -z "$cpuPrimary" ]; then
+    cpuPrimary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$')"
 fi
-gpuTemperatureRaw="$(extract_temp "(gpu|tg[[:alnum:]]+)")"
-cpuTemperature="$(format_temp "${cpuTemperatureRaw}")"
-gpuTemperature="$(format_temp "${gpuTemperatureRaw}")"
-cpuTemperatureInt="$(temp_to_int "${cpuTemperatureRaw}")"
-gpuTemperatureInt="$(temp_to_int "${gpuTemperatureRaw}")"
-# Set Disk Temperature color
-if [[ "${diskTemperature}" =~ '^[0-9]+$' ]] && [ "${diskTemperature}" -gt "${criticalDiskTemperature}" ]; then
-    diskColor="\e[1;41m"
-elif [[ "${diskTemperature}" =~ '^[0-9]+$' ]] && [ "${diskTemperature}" -le "${criticalDiskTemperature}" ] && [ "${diskTemperature}" -gt "${warnDiskTemperature}" ] ; then
-    diskColor="\e[1;43m"
-elif [[ "${diskTemperature}" =~ '^[0-9]+$' ]]; then
-    diskColor="\e[1;42m"
-else
-    diskColor="\e[1;40m"
-    diskTemperature="N/A"
+if [ -z "$cpuPrimary" ]; then
+    cpuPrimary="$(pick_max "$smcRows" 'cpu' '^tc[0-9a-z]+$')"
 fi
-# Set CPU Temperature color
-if [ -z "${cpuTemperatureInt}" ]; then
-    cpuColor="\e[1;40m"
-elif [ "${cpuTemperatureInt}" -gt "${criticalCpuTemperature}" ]; then
-    cpuColor="\e[1;41m"
-elif [ "${cpuTemperatureInt}" -le "${criticalCpuTemperature}" ] && [ "${cpuTemperatureInt}" -gt "${warnCpuTemperature}" ] ; then
-    cpuColor="\e[1;43m"
-else
-    cpuColor="\e[1;42m"
+cpuSecondary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
+
+gpuPrimary="$(pick_max "$smcRows" 'gpu amd radeon|gpu intel graphics|^gpu [0-9]+' '^(tgdd|tcgc|tg[0-9a-z]+|tf1[0-9a-z]+)$')"
+if [ -z "$gpuPrimary" ]; then
+    gpuPrimary="$(pick_max "$smcRows" 'gpu' '^tg[0-9a-z]+$')"
 fi
-# Set GPU Temperature color
-if [ -z "${gpuTemperatureInt}" ]; then
-    gpuColor="\e[1;40m"
-elif [ "${gpuTemperatureInt}" -gt "${criticalCpuTemperature}" ]; then
-    gpuColor="\e[1;41m"
-elif [ "${gpuTemperatureInt}" -le "${criticalCpuTemperature}" ] && [ "${gpuTemperatureInt}" -gt "${warnCpuTemperature}" ] ; then
-    gpuColor="\e[1;43m"
+gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink' '^tg[0-9a-z]*p$' "$(row_key "$gpuPrimary")")"
+
+memPrimary="$(pick_max "$smcRows" 'memory proximity' '^ts0s$')"
+if [ -z "$memPrimary" ]; then
+    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$')"
+fi
+memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$' "$(row_key "$memPrimary")")"
+
+if [ -z "$cpuPrimary" ] && [ -n "$cpuSecondary" ]; then
+    cpuPrimary="$cpuSecondary"
+    cpuSecondary=""
+fi
+if [ -z "$gpuPrimary" ] && [ -n "$gpuSecondary" ]; then
+    gpuPrimary="$gpuSecondary"
+    gpuSecondary=""
+fi
+if [ -z "$memPrimary" ] && [ -n "$memSecondary" ]; then
+    memPrimary="$memSecondary"
+    memSecondary=""
+fi
+
+diskSmartRaw="$(smartctl -a "${diskDevice}" 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Temperature/ {for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+(\.[0-9]+)?$/) last=$i} END{if (last != "") print last}')"
+diskSmc="$(pick_max "$smcRows" 'drive|ssd|nand|disk|hdd bay' '^th[0-9a-z]+$')"
+diskSecondaryText=""
+
+if is_number "$diskSmartRaw"; then
+    diskPrimaryText="$(format_celsius "$diskSmartRaw") (SMART)"
+    diskPrimaryValue="$diskSmartRaw"
+    if [ -n "$diskSmc" ]; then
+        diskSecondaryText="$(sensor_text "$diskSmc")"
+    fi
+elif [ -n "$diskSmc" ]; then
+    diskPrimaryText="$(sensor_text "$diskSmc")"
+    diskPrimaryValue="$(row_value "$diskSmc")"
 else
-    gpuColor="\e[1;42m"
+    diskPrimaryText="N/A"
+    diskPrimaryValue="$(row_value "$diskSmc")"
+fi
+
+cpuPrimaryValue="$(row_value "$cpuPrimary")"
+gpuPrimaryValue="$(row_value "$gpuPrimary")"
+memPrimaryValue="$(row_value "$memPrimary")"
+
+diskColor="$(temp_color "$diskPrimaryValue" "$warnDiskTemperature" "$criticalDiskTemperature")"
+cpuColor="$(temp_color "$cpuPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
+gpuColor="$(temp_color "$gpuPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
+memColor="$(temp_color "$memPrimaryValue" "$warnCpuTemperature" "$criticalCpuTemperature")"
+
+cpuText="$(sensor_text "$cpuPrimary")"
+if [ -n "$cpuSecondary" ]; then
+    cpuText="${cpuText} | $(sensor_text "$cpuSecondary")"
+fi
+
+gpuText="$(sensor_text "$gpuPrimary")"
+if [ -n "$gpuSecondary" ]; then
+    gpuText="${gpuText} | $(sensor_text "$gpuSecondary")"
+fi
+
+memText="$(sensor_text "$memPrimary")"
+if [ -n "$memSecondary" ]; then
+    memText="${memText} | $(sensor_text "$memSecondary")"
+fi
+
+if [ -n "$diskSecondaryText" ]; then
+    diskText="${diskPrimaryText} | ${diskSecondaryText}"
+else
+    diskText="$diskPrimaryText"
 fi
 
 # Print devices temperature
 echo -e "\e[1mSystem Temperature${clear}
-  Disk Temp.: ${fontColor}${diskColor} ${diskTemperature} ${clear}
-  CPU Temp..: ${fontColor}${cpuColor} ${cpuTemperature} ${clear}
-  GPU Temp..: ${fontColor}${gpuColor} ${gpuTemperature} ${clear}
+  Disk Temp.: ${fontColor}${diskColor} ${diskText} ${clear}
+  CPU Temp..: ${fontColor}${cpuColor} ${cpuText} ${clear}
+  GPU Temp..: ${fontColor}${gpuColor} ${gpuText} ${clear}
+  Mem Temp..: ${fontColor}${memColor} ${memText} ${clear}
 "

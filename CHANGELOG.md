@@ -6,6 +6,16 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-03-04
+
+### Changed
+- Temperature modules now use grouped `iSMC` sensor selection for CPU, GPU, and memory instead of first-match parsing, with optional secondary values when available.
+- Temperature outputs are normalized to Celsius with 2 decimal places, including disk temperature.
+- Added `jq` as a required runtime dependency for JSON-based sensor parsing.
+
+### Added
+- Extended system information output to include grouped memory temperature telemetry.
+
 ## [0.1.6] - 2026-03-04
 
 ### Added

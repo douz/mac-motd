@@ -14,77 +14,173 @@ memorySpeed=$(system_profiler SPMemoryDataType | grep -e "Speed" | uniq | awk '{
 warnTemperature=60
 criticalTemperature=80
 clear="\e[0m"
-smcOutput="$(iSMC temp -o table 2>/dev/null)"
+smcJson="$(iSMC temp -o json 2>/dev/null)"
 
-extract_temp() {
-    local pattern="$1"
-    echo "$smcOutput" | awk -v pattern="$pattern" '
-        tolower($0) ~ tolower(pattern) {
-            if (match($0, /[0-9]+(\.[0-9]+)?[[:space:]]*(°C|°F|C|F)/)) {
-                value = substr($0, RSTART, RLENGTH)
-                gsub(/[[:space:]]*(°C|°F|C|F)/, "", value)
-                print value
-                exit
-            } else if (match($0, /[0-9]+(\.[0-9]+)?/)) {
-                print substr($0, RSTART, RLENGTH)
-                exit
-            }
-        }'
+is_number() {
+    local value="$1"
+    [[ -n "$value" ]] && echo "$value" | awk 'BEGIN { ok=1 } { if ($0 !~ /^[0-9]+(\.[0-9]+)?$/) ok=0 } END { exit !ok }'
 }
 
-format_temp() {
+format_celsius() {
     local value="$1"
-    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
-        awk -v v="$value" 'BEGIN { printf "%.1f°C", v }'
+    if is_number "$value"; then
+        awk -v v="$value" 'BEGIN { printf "%.2f°C", v }'
     else
         echo "N/A"
     fi
 }
 
-temp_to_int() {
+rows_from_json() {
+    local json="$1"
+    if [ -z "$json" ]; then
+        return
+    fi
+    echo "$json" | jq -r '
+      if type == "object" then
+        to_entries[]
+        | select(.value.quantity != null)
+        | [
+            .key,
+            (.value.key // ""),
+            (.value.quantity | tonumber),
+            (.value.unit // "°C")
+          ]
+        | @tsv
+      else
+        empty
+      end
+    ' 2>/dev/null | awk -F '\t' 'tolower($1) !~ /trend|error/'
+}
+
+pick_max() {
+    local rows="$1"
+    local nameRegex="$2"
+    local keyRegex="$3"
+    local excludeKey="${4:-}"
+
+    echo "$rows" | awk -F '\t' -v nre="$nameRegex" -v kre="$keyRegex" -v exk="$(echo "$excludeKey" | tr '[:upper:]' '[:lower:]')" '
+        BEGIN { best=-1e9 }
+        {
+            name=$1
+            key=$2
+            qty=$3
+            lname=tolower(name)
+            lkey=tolower(key)
+            nameMatch=(nre != "" && lname ~ nre)
+            keyMatch=(kre != "" && lkey ~ kre)
+            if ((nameMatch || keyMatch) && (exk == "" || lkey != exk)) {
+                q=qty + 0
+                if (q > best) {
+                    best=q
+                    bestName=name
+                    bestKey=key
+                    bestQty=q
+                }
+            }
+        }
+        END {
+            if (best > -1e8) {
+                printf "%s\t%s\t%.6f\n", bestName, bestKey, bestQty
+            }
+        }
+    '
+}
+
+row_value() {
+    local row="$1"
+    [ -z "$row" ] && return
+    echo "$row" | awk -F '\t' '{ print $3 }'
+}
+
+row_key() {
+    local row="$1"
+    [ -z "$row" ] && return
+    echo "$row" | awk -F '\t' '{ print $2 }'
+}
+
+sensor_text() {
+    local row="$1"
+    if [ -z "$row" ]; then
+        echo "N/A"
+        return
+    fi
+    local name key qty
+    IFS=$'\t' read -r name key qty <<<"$row"
+    echo "$(format_celsius "$qty") (${name}, ${key})"
+}
+
+temp_color() {
     local value="$1"
-    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
-        awk -v v="$value" 'BEGIN { print int(v) }'
+    if ! is_number "$value"; then
+        echo "\e[90m"
+    elif awk -v a="$value" -v b="$criticalTemperature" 'BEGIN { exit !(a > b) }'; then
+        echo "\e[31m"
+    elif awk -v a="$value" -v b="$warnTemperature" 'BEGIN { exit !(a > b) }'; then
+        echo "\e[33m"
     else
-        echo ""
+        echo "\e[32m"
     fi
 }
 
-cpuTemperatureRaw="$(extract_temp "(cpu|performance core|efficiency core|tc[[:alnum:]]+|tp[[:alnum:]]+|te[[:alnum:]]+|tf[[:alnum:]]+)")
-if [ -z "${cpuTemperatureRaw}" ]; then
-    cpuTemperatureRaw="$(echo "$smcOutput" | awk 'match($0, /[0-9]+(\.[0-9]+)?/) { print substr($0, RSTART, RLENGTH); exit }')"
+smcRows="$(rows_from_json "$smcJson")"
+
+cpuPrimary="$(pick_max "$smcRows" 'cpu diode filtered|cpu diode virtual|max peci reported|peci sa|cpu performance core|cpu efficiency core' '^(tc0f|tc0e|tcmx|tcsa|tp[0-9a-z]+|te[0-9a-z]+|tf[0-9a-z]+)$')"
+if [ -z "$cpuPrimary" ]; then
+    cpuPrimary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$')"
 fi
-gpuTemperatureRaw="$(extract_temp "(gpu|tg[[:alnum:]]+)")"
-cpuTemperature="$(format_temp "${cpuTemperatureRaw}")"
-gpuTemperature="$(format_temp "${gpuTemperatureRaw}")"
-cpuTemperatureInt="$(temp_to_int "${cpuTemperatureRaw}")"
-gpuTemperatureInt="$(temp_to_int "${gpuTemperatureRaw}")"
-# Set CPU Temperature color
-if [ -z "${cpuTemperatureInt}" ]; then
-    cpuColor="\e[90m"
-elif [ "${cpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
-    cpuColor="\e[31m"
-elif [ "${cpuTemperatureInt}" -le "${criticalTemperature}" ] && [ "${cpuTemperatureInt}" -gt "${warnTemperature}" ] ; then
-    cpuColor="\e[33m"
-else
-    cpuColor="\e[32m"
+if [ -z "$cpuPrimary" ]; then
+    cpuPrimary="$(pick_max "$smcRows" 'cpu' '^tc[0-9a-z]+$')"
 fi
-# Set GPU Temperature color
-if [ -z "${gpuTemperatureInt}" ]; then
-    gpuColor="\e[90m"
-elif [ "${gpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
-    gpuColor="\e[31m"
-elif [ "${gpuTemperatureInt}" -le "${criticalTemperature}" ] && [ "${gpuTemperatureInt}" -gt "${warnTemperature}" ] ; then
-    gpuColor="\e[33m"
-else
-    gpuColor="\e[32m"
+cpuSecondary="$(pick_max "$smcRows" 'cpu core' '^tc[0-9a-z]+c$' "$(row_key "$cpuPrimary")")"
+
+gpuPrimary="$(pick_max "$smcRows" 'gpu amd radeon|gpu intel graphics|^gpu [0-9]+' '^(tgdd|tcgc|tg[0-9a-z]+|tf1[0-9a-z]+)$')"
+if [ -z "$gpuPrimary" ]; then
+    gpuPrimary="$(pick_max "$smcRows" 'gpu' '^tg[0-9a-z]+$')"
 fi
+gpuSecondary="$(pick_max "$smcRows" 'gpu proximity|gpu diode|gpu heatsink' '^tg[0-9a-z]*p$' "$(row_key "$gpuPrimary")")"
+
+memPrimary="$(pick_max "$smcRows" 'memory proximity' '^ts0s$')"
+if [ -z "$memPrimary" ]; then
+    memPrimary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$')"
+fi
+memSecondary="$(pick_max "$smcRows" 'mem bank|memory [0-9]+|dimm' '^tm[0-9a-z]+$' "$(row_key "$memPrimary")")"
+
+if [ -z "$cpuPrimary" ] && [ -n "$cpuSecondary" ]; then
+    cpuPrimary="$cpuSecondary"
+    cpuSecondary=""
+fi
+if [ -z "$gpuPrimary" ] && [ -n "$gpuSecondary" ]; then
+    gpuPrimary="$gpuSecondary"
+    gpuSecondary=""
+fi
+if [ -z "$memPrimary" ] && [ -n "$memSecondary" ]; then
+    memPrimary="$memSecondary"
+    memSecondary=""
+fi
+
+cpuText="$(sensor_text "$cpuPrimary")"
+if [ -n "$cpuSecondary" ]; then
+    cpuText="${cpuText} | $(sensor_text "$cpuSecondary")"
+fi
+gpuText="$(sensor_text "$gpuPrimary")"
+if [ -n "$gpuSecondary" ]; then
+    gpuText="${gpuText} | $(sensor_text "$gpuSecondary")"
+fi
+memText="$(sensor_text "$memPrimary")"
+if [ -n "$memSecondary" ]; then
+    memText="${memText} | $(sensor_text "$memSecondary")"
+fi
+
+cpuColor="$(temp_color "$(row_value "$cpuPrimary")")"
+gpuColor="$(temp_color "$(row_value "$gpuPrimary")")"
+memColor="$(temp_color "$(row_value "$memPrimary")")"
 
 # Print system info
 echo -e "\e[1mSystem Information ${modelIdentifier}\e[0m
 \tOS Version: ${osName} ${osVersion} ${osbuildVersion} ${kernelVersion}
 \tProcessor.: ${procesorName} ${procesorCores} Cores
 \tMemory....: $((${memorySize} / (1024**3))) GB ${memorySpeed} ${memoryType}
-\tCPU Temp..: ${cpuColor}${cpuTemperature}${clear}
-\tGPU Temp..: ${gpuColor}${gpuTemperature}${clear}
+\tCPU Temp..: ${cpuColor}${cpuText}${clear}
+\tGPU Temp..: ${gpuColor}${gpuText}${clear}
+\tMem Temp..: ${memColor}${memText}${clear}
 "

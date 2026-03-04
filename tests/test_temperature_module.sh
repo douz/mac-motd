@@ -22,14 +22,21 @@ cat > "$FAKE_BIN/iSMC" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "${1:-}" != "temp" ]; then
+if [ "${1:-}" != "temp" ] || [ "${2:-}" != "-o" ] || [ "${3:-}" != "json" ]; then
   echo "unexpected command: $*" >&2
   exit 1
 fi
 
 cat <<'OUT'
-CPU Package [TCAD] 55.2 C
-GPU 1 [Tg05] 48.7 C
+{
+  "CPU Diode Filtered 1": {"key":"TC0F","quantity":55.2,"unit":"°C"},
+  "CPU Core 2": {"key":"TC1C","quantity":53.0,"unit":"°C"},
+  "GPU AMD Radeon": {"key":"TGDD","quantity":48.7,"unit":"°C"},
+  "GPU Proximity 1": {"key":"TG0P","quantity":47.1,"unit":"°C"},
+  "Memory Proximity": {"key":"Ts0S","quantity":41.3,"unit":"°C"},
+  "Mem Bank A1": {"key":"TM0P","quantity":40.8,"unit":"°C"},
+  "Drive 0 OOBv3 Absolute Raw B": {"key":"TH0b","quantity":39.9,"unit":"°C"}
+}
 OUT
 EOF
 
@@ -37,8 +44,9 @@ chmod +x "$FAKE_BIN/smartctl" "$FAKE_BIN/iSMC"
 
 PATH="$FAKE_BIN:$PATH" zsh "$REPO_DIR/modules/temperature.sh" > "$OUTPUT_FILE"
 
-grep -q 'Disk Temp\.:.*42' "$OUTPUT_FILE"
-grep -q 'CPU Temp\.\.:.*55\.2°C' "$OUTPUT_FILE"
-grep -q 'GPU Temp\.\.:.*48\.7°C' "$OUTPUT_FILE"
+grep -q 'Disk Temp\.:.*42\.00°C (SMART).*39\.90°C' "$OUTPUT_FILE"
+grep -q 'CPU Temp\.\.:.*55\.20°C.*53\.00°C' "$OUTPUT_FILE"
+grep -q 'GPU Temp\.\.:.*48\.70°C.*47\.10°C' "$OUTPUT_FILE"
+grep -q 'Mem Temp\.\.:.*41\.30°C.*40\.80°C' "$OUTPUT_FILE"
 
 echo "test_temperature_module.sh: PASS"
