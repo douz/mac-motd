@@ -170,8 +170,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.7
-git push origin v0.1.7
+git tag v0.1.8
+git push origin v0.1.8
 ```
 
 3. GitHub Actions will:
