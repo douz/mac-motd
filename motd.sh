@@ -19,8 +19,8 @@ moduleRequirements=(
   battery "pmset"
   calendar_events "icalBuddy"
   hdd_usage "df"
-  system_info "sw_vers sysctl system_profiler osx-cpu-temp"
-  temperature "smartctl osx-cpu-temp"
+  system_info "sw_vers sysctl system_profiler smctemp"
+  temperature "smartctl smctemp"
   fastfetch "fastfetch"
 )
 

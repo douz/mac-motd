@@ -14,12 +14,44 @@ memorySpeed=$(system_profiler SPMemoryDataType | grep -e "Speed" | uniq | awk '{
 warnTemperature=60
 criticalTemperature=80
 clear="\e[0m"
-cpuTemperature=$(osx-cpu-temp -C -c)
-cpuTemperatureInt=$(echo ${cpuTemperature} | awk '{print int($1)}')
-gpuTemperature=$(osx-cpu-temp -C -g)
-gpuTemperatureInt=$(echo ${gpuTemperature} | awk '{print int($1)}')
+smcOutput="$(smctemp 2>/dev/null)"
+
+extract_temp() {
+    local pattern="$1"
+    echo "$smcOutput" | awk -v pattern="$pattern" 'BEGIN { IGNORECASE=1 } $0 ~ pattern { if (match($0, /[0-9]+(\.[0-9]+)?/)) { print substr($0, RSTART, RLENGTH); exit } }'
+}
+
+format_temp() {
+    local value="$1"
+    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
+        awk -v v="$value" 'BEGIN { printf "%.1f°C", v }'
+    else
+        echo "N/A"
+    fi
+}
+
+temp_to_int() {
+    local value="$1"
+    if [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]]; then
+        awk -v v="$value" 'BEGIN { print int(v) }'
+    else
+        echo ""
+    fi
+}
+
+cpuTemperatureRaw="$(extract_temp "(cpu|tc[[:alnum:]]+)")"
+if [ -z "${cpuTemperatureRaw}" ]; then
+    cpuTemperatureRaw="$(echo "$smcOutput" | awk 'match($0, /[0-9]+(\.[0-9]+)?/) { print substr($0, RSTART, RLENGTH); exit }')"
+fi
+gpuTemperatureRaw="$(extract_temp "(gpu|tg[[:alnum:]]+)")"
+cpuTemperature="$(format_temp "${cpuTemperatureRaw}")"
+gpuTemperature="$(format_temp "${gpuTemperatureRaw}")"
+cpuTemperatureInt="$(temp_to_int "${cpuTemperatureRaw}")"
+gpuTemperatureInt="$(temp_to_int "${gpuTemperatureRaw}")"
 # Set CPU Temperature color
-if [ "${cpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
+if [ -z "${cpuTemperatureInt}" ]; then
+    cpuColor="\e[90m"
+elif [ "${cpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
     cpuColor="\e[31m"
 elif [ "${cpuTemperatureInt}" -le "${criticalTemperature}" ] && [ "${cpuTemperatureInt}" -gt "${warnTemperature}" ] ; then
     cpuColor="\e[33m"
@@ -27,7 +59,9 @@ else
     cpuColor="\e[32m"
 fi
 # Set GPU Temperature color
-if [ "${gpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
+if [ -z "${gpuTemperatureInt}" ]; then
+    gpuColor="\e[90m"
+elif [ "${gpuTemperatureInt}" -gt "${criticalTemperature}" ]; then
     gpuColor="\e[31m"
 elif [ "${gpuTemperatureInt}" -le "${criticalTemperature}" ] && [ "${gpuTemperatureInt}" -gt "${warnTemperature}" ] ; then
     gpuColor="\e[33m"

@@ -48,6 +48,6 @@ fi
 barContent="${barContent}]"
 
 # Print the result
-echo -e "\e[1mHDD Usage:\e[0m ${diskUsage} GB out of ${diskSize} G"
+echo -e "\e[1mHDD Usage:\e[0m ${diskUsage}GB out of ${diskSize}GB"
 echo -e ${barContent}
 echo ""

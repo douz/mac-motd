@@ -42,6 +42,6 @@ chmod +x "$FAKE_BIN/df"
 
 PATH="$FAKE_BIN:$PATH" zsh "$REPO_DIR/modules/hdd_usage.sh" > "$OUTPUT_FILE"
 
-grep -q 'HDD Usage:.*363 GB out of 465 G' "$OUTPUT_FILE"
+grep -q 'HDD Usage:.*363GB out of 465GB' "$OUTPUT_FILE"
 
 echo "test_hdd_usage.sh: PASS"
