@@ -6,6 +6,9 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+### Changed
+- Updated install and upgrade documentation to explicitly include third-party tap setup for `narugit/tap/smctemp`.
+
 ## [0.1.4] - 2026-03-04
 
 ### Changed

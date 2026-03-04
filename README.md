@@ -22,6 +22,7 @@ Use your tap (documented at `motd.douz.io`):
 
 ```bash
 brew tap douz/tap
+brew tap narugit/tap
 brew install mac-motd
 mac-motd install
 ```
@@ -30,6 +31,7 @@ For upgrades after a new release:
 
 ```bash
 brew update
+brew tap narugit/tap
 brew upgrade mac-motd
 mac-motd install
 ```
@@ -41,7 +43,8 @@ mac-motd install
 Install module dependencies first (manual install does not install Homebrew dependencies automatically):
 
 ```bash
-brew install figlet ical-buddy smctemp smartmontools
+brew tap narugit/tap
+brew install figlet ical-buddy narugit/tap/smctemp smartmontools
 ```
 
 ```bash
@@ -136,13 +139,14 @@ The following tools are used by modules and should be installed when needed:
 
 - `figlet`
 - `ical-buddy`
-- `smctemp`
+- `narugit/tap/smctemp` (provides the `smctemp` command)
 - `smartmontools`
 
 Install with:
 
 ```bash
-brew install figlet ical-buddy smctemp smartmontools
+brew tap narugit/tap
+brew install figlet ical-buddy narugit/tap/smctemp smartmontools
 ```
 
 The runtime skips modules whose dependencies are missing and prints a warning.
