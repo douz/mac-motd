@@ -26,7 +26,7 @@ Prints disk, CPU, GPU, and memory temperatures with threshold-based highlighting
 
 - Config: `MOTD_DISK_DEVICE` env var (falls back to the root disk detected by `motd.sh`)
 - Requires: `smartctl`, `iSMC`, `jq`
-- Notes: `iSMC` is provided by the Homebrew `ismc` formula; output uses grouped key selection with optional secondary values (for CPU/GPU/Memory) and 2-decimal Celsius formatting
+- Notes: `iSMC` is provided by the Homebrew `ismc` formula; output uses grouped key selection and prints additional CPU/GPU/Memory/Disk values on separate rows with per-value color coding and 2-decimal Celsius formatting
 
 ### `hdd_usage.sh`
 
