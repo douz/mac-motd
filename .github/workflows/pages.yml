@@ -34,8 +34,7 @@ jobs:
           cp site/index.html public/index.html
           cp site/CNAME public/CNAME
           cp site/.nojekyll public/.nojekyll
-          cp images/screen1.png public/images/screen1.png
-          cp images/screen2.png public/images/screen2.png
+          cp -R images/. public/images/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
