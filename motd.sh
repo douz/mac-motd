@@ -47,8 +47,11 @@ missing_commands() {
 }
 
 if [ -f "$configFile" ]; then
+  # Export user-defined config variables so child module scripts can consume them.
+  set -a
   # shellcheck disable=SC1090
   source "$configFile"
+  set +a
 fi
 
 export MOTD_DISK_DEVICE="${MOTD_DISK_DEVICE:-$(resolve_root_disk)}"

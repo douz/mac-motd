@@ -2,7 +2,7 @@
 
 Modular MOTD for macOS + zsh, with user config in `~/.douz.io/motd_config.zsh`.
 
-![mac-motd screenshot](images/screen2.png)
+![mac-motd screenshot](images/screen3.png)
 
 ## What This Repo Provides
 
@@ -170,8 +170,8 @@ What is covered:
 2. Create and push a version tag:
 
 ```bash
-git tag v0.1.8
-git push origin v0.1.8
+git tag v0.1.9
+git push origin v0.1.9
 ```
 
 3. GitHub Actions will:

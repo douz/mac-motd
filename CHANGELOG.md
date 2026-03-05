@@ -6,6 +6,15 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-03-05
+
+### Fixed
+- `motd.sh` now exports variables defined in `~/.douz.io/motd_config.zsh` before module execution, so module scripts consistently read user configuration values.
+
+### Changed
+- Updated project and site screenshots to use `images/screen3.png`.
+- Extended runtime test coverage to verify config-defined variables are visible inside child module scripts.
+
 ## [0.1.8] - 2026-03-04
 
 ### Changed
